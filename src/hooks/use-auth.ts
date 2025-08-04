@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { authService } from '../../lib/supabase/auth'
+import { authService } from '@/lib/supabase/auth'
 import type { User, Session } from '@supabase/supabase-js'
 import { toast } from 'sonner'
 

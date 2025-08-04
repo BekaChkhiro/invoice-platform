@@ -1,6 +1,5 @@
-import { createClient } from './client'
+import { createClient } from '@/lib/supabase/client'
 import type { AuthError, User, Session } from '@supabase/supabase-js'
-import type { Database } from '@/types/database'
 
 export interface AuthResult {
   user: User | null

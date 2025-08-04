@@ -1,3 +1,246 @@
-export default function Sidebar() {
-  return <div>Sidebar</div>
+"use client"
+
+import { usePathname } from "next/navigation"
+import Link from "next/link"
+import { cn } from "@/lib/utils"
+import { 
+  LayoutDashboard, 
+  FileText, 
+  Users, 
+  Settings, 
+  LogOut,
+  CreditCard,
+  ChevronRight
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Separator } from "@/components/ui/separator"
+import { useAuth } from "@/hooks/use-auth"
+import { useEffect, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
+import { Badge } from "@/components/ui/badge"
+
+const navigation = [
+  {
+    name: "დაშბორდი",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    name: "ინვოისები",
+    href: "/dashboard/invoices",
+    icon: FileText,
+  },
+  {
+    name: "კლიენტები",
+    href: "/dashboard/clients",
+    icon: Users,
+  },
+  {
+    name: "პარამეტრები",
+    href: "/dashboard/settings",
+    icon: Settings,
+  },
+]
+
+export function Sidebar() {
+  const pathname = usePathname()
+  const { user, signOut } = useAuth()
+  const [profile, setProfile] = useState<any>(null)
+  const [credits, setCredits] = useState<any>(null)
+  const [company, setCompany] = useState<any>(null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    if (user) {
+      loadUserData()
+    }
+  }, [user])
+
+  const loadUserData = async () => {
+    if (!user) return
+
+    try {
+      // Load user profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (profileData) {
+        setProfile(profileData)
+      }
+
+      // Load user credits
+      const { data: creditsData, error: creditsError } = await supabase
+        .from('user_credits')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (creditsData) {
+        setCredits(creditsData)
+      } else {
+        // Default credits for new users
+        setCredits({
+          user_id: user.id,
+          total_credits: 5,
+          used_credits: 0,
+          plan_type: 'free'
+        })
+      }
+
+      // Load user company
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (companyData) {
+        setCompany(companyData)
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error)
+    }
+  }
+
+  const getInitials = (name: string | null) => {
+    if (!name) return "U"
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const getPlanBadge = (planType: string) => {
+    const variants: Record<string, "default" | "secondary" | "destructive"> = {
+      free: "secondary",
+      basic: "default",
+      pro: "destructive",
+    }
+    return (
+      <Badge variant={variants[planType] || "secondary"} className="text-xs">
+        {planType.toUpperCase()}
+      </Badge>
+    )
+  }
+
+  return (
+    <aside className="fixed left-0 top-0 z-40 h-screen w-[260px] bg-gray-900 text-white">
+      <div className="flex h-full flex-col">
+        {/* Logo Section */}
+        <div className="p-6">
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <div className="bg-primary p-2 rounded-lg">
+              <FileText className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h2 className="font-bold text-lg">Invoice Platform</h2>
+              {company && (
+                <p className="text-xs text-gray-400 truncate max-w-[140px]">
+                  {company.name}
+                </p>
+              )}
+            </div>
+          </Link>
+        </div>
+
+        <Separator className="bg-gray-800" />
+
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-6">
+          <ul className="space-y-1">
+            {navigation.map((item) => {
+              const isActive = pathname === item.href || 
+                            (item.href !== '/dashboard' && pathname.startsWith(item.href))
+              
+              return (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-gray-800",
+                      isActive
+                        ? "bg-gray-800 text-white"
+                        : "text-gray-400 hover:text-white"
+                    )}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.name}</span>
+                    {isActive && (
+                      <ChevronRight className="ml-auto h-4 w-4" />
+                    )}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
+
+        {/* Credits Section */}
+        {credits && (
+          <div className="mx-6 mb-4">
+            <div className="rounded-lg bg-gray-800 p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-400">კრედიტები</span>
+                {getPlanBadge(credits.plan_type)}
+              </div>
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-gray-400" />
+                <span className="text-lg font-semibold">
+                  {credits.total_credits - credits.used_credits}
+                </span>
+                <span className="text-sm text-gray-400">
+                  / {credits.total_credits}
+                </span>
+              </div>
+              {credits.plan_type === 'free' && (
+                <Link href="/dashboard/settings/billing">
+                  <Button variant="link" className="h-auto p-0 mt-2 text-xs text-primary-400">
+                    განახლება Pro-ზე →
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
+
+        <Separator className="bg-gray-800" />
+
+        {/* User Section */}
+        <div className="p-4">
+          <div className="flex items-center gap-3 rounded-lg p-3 hover:bg-gray-800 transition-colors">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={profile?.avatar_url} />
+              <AvatarFallback className="bg-gray-700 text-white">
+                {getInitials(profile?.full_name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">
+                {profile?.full_name || "User"}
+              </p>
+              <p className="text-xs text-gray-400 truncate">
+                {user?.email}
+              </p>
+            </div>
+          </div>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full mt-2 justify-start text-gray-400 hover:text-white hover:bg-gray-800"
+            onClick={signOut}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            გასვლა
+          </Button>
+        </div>
+      </div>
+    </aside>
+  )
 }
