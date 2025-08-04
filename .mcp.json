@@ -1,0 +1,16 @@
+{
+    "mcpServers": {
+      "supabase": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@supabase/mcp-server-supabase@latest",
+          "--read-only",
+          "--project-ref=Invoice-platform"
+        ],
+        "env": {
+          "SUPABASE_ACCESS_TOKEN": "sbp_ad6ce9847812ea75a4eb239ba099dcac44a1a7a1"
+        }
+      }
+    }
+  }
