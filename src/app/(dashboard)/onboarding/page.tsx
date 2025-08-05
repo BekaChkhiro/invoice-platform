@@ -46,18 +46,33 @@ export default function OnboardingPage() {
   })
 
   const onSubmit = async (data: CompanyFormData) => {
-    if (!user) return
+    if (!user) {
+      setError("მომხმარებელი ვერ მოიძებნა")
+      return
+    }
 
     setIsLoading(true)
     setError(null)
 
     try {
-      const { error: insertError } = await supabase
+      console.log("Creating company for user:", user.id)
+      console.log("Company data:", data)
+      
+      const { data: insertData, error: insertError } = await supabase
         .from("companies")
         .insert({
           user_id: user.id,
+          name: data.name || "ჩემი კომპანია",
+          invoice_prefix: "INV",
+          invoice_counter: 1,
+          vat_rate: 18,
+          currency: "GEL",
           ...data,
         })
+        .select()
+
+      console.log("Insert result:", insertData)
+      console.log("Insert error:", insertError)
 
       if (insertError) throw insertError
 
@@ -70,6 +85,7 @@ export default function OnboardingPage() {
       router.refresh()
 
     } catch (error: any) {
+      console.error("Company creation error:", error)
       setError(error.message || "კომპანიის შექმნა ვერ მოხერხდა")
     } finally {
       setIsLoading(false)
@@ -77,9 +93,8 @@ export default function OnboardingPage() {
   }
 
   const handleSkip = async () => {
-    // Still need to create a minimal company record
-    const form = document.getElementById('company-form') as HTMLFormElement
-    form.requestSubmit()
+    // Create minimal company record
+    await onSubmit({ name: "ჩემი კომპანია" })
   }
 
   return (

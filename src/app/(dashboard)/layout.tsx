@@ -11,15 +11,6 @@ export default async function DashboardLayout({
 }) {
   // Check authentication
   const user = await requireAuth()
-  
-  // Check if user has company setup
-  const { data: company } = await getCompany(user.id)
-  
-  // If no company, redirect to onboarding
-  // TODO: Temporarily disabled for testing
-  // if (!company) {
-  //   redirect("/onboarding")
-  // }
 
   return (
     <div className="min-h-screen bg-gray-50">

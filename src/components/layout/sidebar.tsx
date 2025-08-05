@@ -10,11 +10,17 @@ import {
   Settings, 
   LogOut,
   CreditCard,
-  ChevronRight
+  ChevronRight,
+  ChevronDown,
+  Building2,
+  User,
+  UsersIcon,
+  Crown
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { useAuth } from "@/hooks/use-auth"
 import { useEffect, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
@@ -36,10 +42,29 @@ const navigation = [
     href: "/dashboard/clients",
     icon: Users,
   },
+]
+
+const settingsNavigation = [
   {
-    name: "პარამეტრები",
-    href: "/dashboard/settings",
-    icon: Settings,
+    name: "კომპანია",
+    href: "/dashboard/settings/company",
+    icon: Building2,
+  },
+  {
+    name: "პროფილი",
+    href: "/dashboard/settings/profile",
+    icon: User,
+  },
+  {
+    name: "ბილინგი",
+    href: "/dashboard/settings/billing",
+    icon: CreditCard,
+  },
+  {
+    name: "გუნდი",
+    href: "/dashboard/settings/team",
+    icon: UsersIcon,
+    isPro: true,
   },
 ]
 
@@ -49,6 +74,8 @@ export function Sidebar() {
   const [profile, setProfile] = useState<any>(null)
   const [credits, setCredits] = useState<any>(null)
   const [company, setCompany] = useState<any>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [isHydrated, setIsHydrated] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -56,6 +83,33 @@ export function Sidebar() {
       loadUserData()
     }
   }, [user])
+
+  // Hydration effect - runs only on client after mount
+  useEffect(() => {
+    setIsHydrated(true)
+    
+    // Read from localStorage after hydration
+    const stored = localStorage.getItem('sidebar-settings-open')
+    if (stored) {
+      setSettingsOpen(JSON.parse(stored))
+    } else if (pathname.startsWith('/dashboard/settings')) {
+      setSettingsOpen(true)
+    }
+  }, [pathname])
+
+  // Save to localStorage only after hydration
+  useEffect(() => {
+    if (isHydrated) {
+      localStorage.setItem('sidebar-settings-open', JSON.stringify(settingsOpen))
+    }
+  }, [settingsOpen, isHydrated])
+
+  // Auto-expand when navigating to settings pages
+  useEffect(() => {
+    if (isHydrated && pathname.startsWith('/dashboard/settings') && !settingsOpen) {
+      setSettingsOpen(true)
+    }
+  }, [pathname, isHydrated, settingsOpen])
 
   const loadUserData = async () => {
     if (!user) return
@@ -178,6 +232,61 @@ export function Sidebar() {
                 </li>
               )
             })}
+
+            {/* Settings Menu */}
+            <li>
+              <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-gray-800",
+                      pathname.startsWith('/dashboard/settings')
+                        ? "bg-gray-800 text-white"
+                        : "text-gray-400 hover:text-white"
+                    )}
+                  >
+                    <Settings className="h-5 w-5" />
+                    <span>პარამეტრები</span>
+                    {settingsOpen ? (
+                      <ChevronDown className="ml-auto h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="ml-auto h-4 w-4" />
+                    )}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-1 pl-6 pt-1">
+                  {settingsNavigation.map((item) => {
+                    const isActive = pathname === item.href
+                    const isProOnly = item.isPro && credits?.plan_type === 'free'
+                    
+                    return (
+                      <div key={item.name} className="relative">
+                        <Link
+                          href={item.href}
+                          className={cn(
+                            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all hover:bg-gray-800",
+                            isActive
+                              ? "bg-gray-800 text-white"
+                              : "text-gray-400 hover:text-white",
+                            isProOnly && "opacity-50"
+                          )}
+                        >
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.name}</span>
+                          {item.isPro && (
+                            <Crown className="h-3 w-3 text-yellow-500" />
+                          )}
+                          {isActive && (
+                            <ChevronRight className="ml-auto h-4 w-4" />
+                          )}
+                        </Link>
+                      </div>
+                    )
+                  })}
+                </CollapsibleContent>
+              </Collapsible>
+            </li>
           </ul>
         </nav>
 
