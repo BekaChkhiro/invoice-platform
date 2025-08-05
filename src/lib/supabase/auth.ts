@@ -34,7 +34,14 @@ export interface ProfileData {
 }
 
 export class AuthService {
-  private supabase = createClient()
+  private _supabase: ReturnType<typeof createClient> | null = null
+  
+  private get supabase() {
+    if (!this._supabase) {
+      this._supabase = createClient()
+    }
+    return this._supabase
+  }
 
   /**
    * Register a new user without automatic sign-in
