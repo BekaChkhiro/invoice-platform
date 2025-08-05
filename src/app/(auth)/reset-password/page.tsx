@@ -1,6 +1,9 @@
 "use client"
 
 import { useState } from "react"
+
+// Force dynamic rendering to avoid SSG issues with Supabase client
+export const dynamic = 'force-dynamic'
 import Link from "next/link"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"

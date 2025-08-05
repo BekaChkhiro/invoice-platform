@@ -1,6 +1,9 @@
 "use client"
 
 import { useState, useEffect, Suspense } from "react"
+
+// Force dynamic rendering to avoid SSG issues with Supabase client
+export const dynamic = 'force-dynamic'
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
