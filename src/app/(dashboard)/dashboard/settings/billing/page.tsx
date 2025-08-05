@@ -140,7 +140,7 @@ export default function BillingSettingsPage() {
     return ((credits.total_credits - credits.used_credits) / credits.total_credits) * 100
   }
 
-  const handleUpgrade = (_planId: string) => {
+  const handleUpgrade = () => {
     toast({
       title: "განახლება",
       description: "გადახდის სისტემა მალე ხელმისაწვდომი იქნება",
@@ -189,7 +189,7 @@ export default function BillingSettingsPage() {
               </p>
             </div>
             {credits?.plan_type === 'free' && (
-              <Button onClick={() => handleUpgrade('basic')}>
+              <Button onClick={() => handleUpgrade()}>
                 <Crown className="mr-2 h-4 w-4" />
                 განახლება
               </Button>
@@ -284,7 +284,7 @@ export default function BillingSettingsPage() {
                       <Button 
                         className="w-full" 
                         variant={plan.id === 'free' ? 'outline' : 'default'}
-                        onClick={() => handleUpgrade(plan.id)}
+                        onClick={() => handleUpgrade()}
                       >
                         {plan.id === 'free' ? 'ჩამოტვირთვა' : 'განახლება'}
                       </Button>

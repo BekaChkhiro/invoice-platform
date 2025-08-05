@@ -7,9 +7,19 @@ import { authService } from '@/lib/supabase/auth'
 export default function DebugPage() {
   const [authData, setAuthData] = useState<{ session?: unknown; user?: unknown; cookies?: string; timestamp?: string; error?: string; loginResult?: unknown } | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  const [mounted, setMounted] = useState(false)
+  const [hasEnvVars, setHasEnvVars] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
+    setHasEnvVars(!!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted || !hasEnvVars) return
+
+    const supabase = createClient()
+    
     const checkAuth = async () => {
       try {
         // Check current session
@@ -34,10 +44,28 @@ export default function DebugPage() {
     }
 
     checkAuth()
-  }, [supabase.auth]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [mounted, hasEnvVars])
+
+  if (!mounted) {
+    return <div className="p-8">Loading...</div>
+  }
+
+  // Check if environment variables are available
+  if (!hasEnvVars) {
+    return (
+      <div className="p-8">
+        <h1 className="text-2xl font-bold mb-4">Debug Auth</h1>
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <strong>Environment variables missing!</strong><br />
+          Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
+        </div>
+      </div>
+    )
+  }
 
   const testLogin = async () => {
     try {
+      const supabase = createClient()
       const result = await authService.login({
         email: 'test@example.com',
         password: 'test123456'

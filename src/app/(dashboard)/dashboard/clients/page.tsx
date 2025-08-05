@@ -47,7 +47,7 @@ export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([])
   const [stats, setStats] = useState<{ total: number; active: number; individuals: number; companies: number } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [company, setCompany] = useState<{ id: string; user_id: string; name: string; invoice_prefix: string; invoice_counter: number; vat_rate: number; currency: string } | null>(null)
+  const [, setCompany] = useState<{ id: string; user_id: string; name: string; invoice_prefix: string; invoice_counter: number; vat_rate: number; currency: string } | null>(null)
   const [deleteClient, setDeleteClient] = useState<Client | null>(null)
   const supabase = createClient()
 
@@ -99,7 +99,7 @@ export default function ClientsPage() {
       const statsData = await clientService.getClientStats(companyData.id)
       setStats(statsData)
 
-    } catch (_error) {
+    } catch {
       toast({
         title: "შეცდომა",
         description: "კლიენტების ჩატვირთვა ვერ მოხერხდა",
@@ -120,7 +120,7 @@ export default function ClientsPage() {
         description: "კლიენტი წარმატებით წაიშალა",
       })
       loadData()
-    } catch (error) {
+    } catch {
       toast({
         title: "შეცდომა",
         description: "კლიენტის წაშლა ვერ მოხერხდა",

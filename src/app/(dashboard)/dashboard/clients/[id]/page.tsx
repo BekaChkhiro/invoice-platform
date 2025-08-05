@@ -13,7 +13,6 @@ import {
   Edit, 
   FileText,
   MoreVertical,
-  TrendingUp,
   Calendar
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -43,13 +42,13 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
   useEffect(() => {
     loadClient()
-  }, [id])
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadClient = async () => {
     try {
       const data = await clientService.getClient(id)
       setClient(data)
-    } catch (error) {
+    } catch {
       router.push("/dashboard/clients")
     } finally {
       setIsLoading(false)

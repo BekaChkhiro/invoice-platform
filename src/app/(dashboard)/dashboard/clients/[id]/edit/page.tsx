@@ -27,7 +27,7 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
     try {
       const data = await clientService.getClient(id)
       setClient(data)
-    } catch (_error) {
+    } catch {
       toast({
         title: "შეცდომა",
         description: "კლიენტის ჩატვირთვა ვერ მოხერხდა",
