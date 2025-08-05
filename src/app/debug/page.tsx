@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { authService } from '@/lib/supabase/auth'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 export default function DebugPage() {
   const [authData, setAuthData] = useState<{ session?: unknown; user?: unknown; cookies?: string; timestamp?: string; error?: string; loginResult?: unknown } | null>(null)
   const [loading, setLoading] = useState(true)
