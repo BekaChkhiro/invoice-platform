@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ოფლაინ რეჟიმი - Invoice Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .offline-container {
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .offline-icon {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .retry-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .retry-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .features {
+            margin-top: 3rem;
+            text-align: left;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .online {
+            background: rgba(16, 185, 129, 0.8);
+        }
+        
+        .offline {
+            background: rgba(239, 68, 68, 0.8);
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            p {
+                font-size: 1rem;
+            }
+            
+            .offline-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 2rem;
+            }
+            
+            .features {
+                text-align: center;
+            }
+            
+            .feature-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .feature-icon {
+                margin-right: 0;
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-indicator" id="statusIndicator">
+        📶 ოფლაინ რეჟიმი
+    </div>
+    
+    <div class="offline-container">
+        <div class="offline-icon">
+            📱
+        </div>
+        
+        <h1>ოფლაინ რეჟიმი</h1>
+        <p>
+            თქვენ არ ხართ დაკავშირებული ინტერნეტთან. 
+            ზოგიერთი ფუნქცია შეზღუდული იქნება, მაგრამ შეგიძლიათ მუშაობა გააგრძელოთ შენახული მონაცემებით.
+        </p>
+        
+        <button class="retry-button" onclick="checkConnection()">
+            🔄 ხელახალი მცდელობა
+        </button>
+        
+        <div class="features">
+            <div class="feature-item">
+                <div class="feature-icon">📋</div>
+                <div>
+                    <strong>შენახული ინვოისები</strong><br>
+                    <small>ნახეთ და ჩაასწორეთ შენახული ინვოისები</small>
+                </div>
+            </div>
+            
+            <div class="feature-item">
+                <div class="feature-icon">👥</div>
+                <div>
+                    <strong>კლიენტების სია</strong><br>
+                    <small>მუშაობა კლიენტების მონაცემებზე</small>
+                </div>
+            </div>
+            
+            <div class="feature-item">
+                <div class="feature-icon">💾</div>
+                <div>
+                    <strong>ავტომატური შენახვა</strong><br>
+                    <small>ცვლილებები შეინახება კავშირის აღდგენისთანავე</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isOnline = navigator.onLine;
+        
+        function updateConnectionStatus() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            
+            if (navigator.onLine) {
+                statusIndicator.textContent = '📶 ონლაინ';
+                statusIndicator.className = 'status-indicator online';
+                
+                // Auto-redirect when back online
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1500);
+            } else {
+                statusIndicator.textContent = '📶 ოფლაინ რეჟიმი';
+                statusIndicator.className = 'status-indicator offline';
+            }
+        }
+        
+        function checkConnection() {
+            if (navigator.onLine) {
+                window.location.href = '/dashboard';
+            } else {
+                // Show feedback
+                const button = document.querySelector('.retry-button');
+                const originalText = button.textContent;
+                
+                button.textContent = '❌ კავშირი არ არის';
+                button.style.background = 'rgba(239, 68, 68, 0.3)';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.style.background = 'rgba(255, 255, 255, 0.2)';
+                }, 2000);
+            }
+        }
+        
+        // Listen for connection changes
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+        
+        // Initial status update
+        updateConnectionStatus();
+        
+        // Periodic connection check
+        setInterval(() => {
+            if (navigator.onLine && !isOnline) {
+                updateConnectionStatus();
+                isOnline = true;
+            } else if (!navigator.onLine && isOnline) {
+                updateConnectionStatus();
+                isOnline = false;
+            }
+        }, 5000);
+        
+        // Register service worker update handler
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'CACHE_UPDATED') {
+                    const button = document.querySelector('.retry-button');
+                    button.textContent = '✅ განახლებულია - ხელახალი მცდელობა';
+                    button.style.background = 'rgba(16, 185, 129, 0.3)';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

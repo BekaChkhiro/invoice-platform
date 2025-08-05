@@ -160,4 +160,133 @@
   .glass {
     @apply bg-background/80 backdrop-blur-sm;
   }
+
+  /* Mobile Safe Area */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-area-right {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Touch Targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* PWA Display Modes */
+  @media (display-mode: standalone) {
+    .pwa-only {
+      display: block;
+    }
+
+    .web-only {
+      display: none;
+    }
+  }
+
+  @media not all and (display-mode: standalone) {
+    .pwa-only {
+      display: none;
+    }
+
+    .web-only {
+      display: block;
+    }
+  }
+
+  /* Mobile Gesture Support */
+  .swipeable {
+    touch-action: pan-x;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .no-scroll {
+    overscroll-behavior: none;
+  }
+
+  /* Mobile Typography */
+  @media (max-width: 640px) {
+    h1 {
+      @apply text-2xl;
+    }
+
+    h2 {
+      @apply text-xl;
+    }
+
+    h3 {
+      @apply text-lg;
+    }
+  }
+
+  /* High DPI Support */
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .high-dpi-text {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  }
+
+  /* Focus Visible for Mobile */
+  @media (hover: none) {
+    .focus\:ring-2:focus {
+      --tw-ring-opacity: 0;
+    }
+
+    .focus-visible\:ring-2:focus-visible {
+      --tw-ring-opacity: 1;
+    }
+  }
+
+  /* Mobile Specific Animations */
+  .mobile-slide-up {
+    transform: translateY(100%);
+    transition: transform 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
+  }
+
+  .mobile-slide-up.active {
+    transform: translateY(0);
+  }
+
+  /* Haptic Feedback Simulation */
+  .haptic-light {
+    transition: transform 50ms ease-out;
+  }
+
+  .haptic-light:active {
+    transform: scale(0.98);
+  }
+
+  .haptic-medium {
+    transition: transform 100ms ease-out;
+  }
+
+  .haptic-medium:active {
+    transform: scale(0.95);
+  }
+
+  /* Pull to Refresh */
+  .pull-to-refresh {
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Dark Mode Mobile Adjustments */
+  @media (prefers-color-scheme: dark) {
+    .mobile-dark-adjust {
+      -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+    }
+  }
 }

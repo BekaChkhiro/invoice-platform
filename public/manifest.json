@@ -1,0 +1,125 @@
+{
+  "name": "Invoice Platform - ინვოისის პლატფორმა",
+  "short_name": "InvoicePro",
+  "description": "Professional invoice management for Georgian businesses - ინვოისების პროფესიონალური მართვა ქართული ბიზნესებისთვის",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait-primary",
+  "categories": ["business", "finance", "productivity"],
+  "lang": "ka-GE",
+  "dir": "ltr",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "ახალი ინვოისი",
+      "short_name": "ინვოისი",
+      "description": "შექმენით ახალი ინვოისი",
+      "url": "/dashboard/invoices/new",
+      "icons": [
+        {
+          "src": "/icons/shortcut-invoice.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "კლიენტები",
+      "short_name": "კლიენტები",
+      "description": "მართეთ კლიენტები",
+      "url": "/dashboard/clients",
+      "icons": [
+        {
+          "src": "/icons/shortcut-clients.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "დაშბორდი",
+      "short_name": "მთავარი",
+      "description": "მთავარი გვერდი",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/icons/shortcut-dashboard.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-home.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Desktop Dashboard"
+    },
+    {
+      "src": "/screenshots/mobile-home.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile Dashboard"
+    }
+  ],
+  "prefer_related_applications": false,
+  "protocol_handlers": [
+    {
+      "protocol": "mailto",
+      "url": "/dashboard/invoices/new?email=%s"
+    }
+  ]
+}
