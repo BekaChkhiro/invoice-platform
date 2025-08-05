@@ -324,9 +324,9 @@ export function Sidebar() {
         <div className="p-4">
           <div className="flex items-center gap-3 rounded-lg p-3 hover:bg-gray-800 transition-colors">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={profile?.avatar_url} />
+              <AvatarImage src={profile?.avatar_url || undefined} />
               <AvatarFallback className="bg-gray-700 text-white">
-                {getInitials(profile?.full_name)}
+                {getInitials(profile?.full_name || null)}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">

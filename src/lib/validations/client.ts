@@ -1,9 +1,7 @@
 import * as z from "zod"
 
 export const clientSchema = z.object({
-  type: z.enum(['individual', 'company'], {
-    required_error: "აირჩიეთ კლიენტის ტიპი",
-  }),
+  type: z.enum(['individual', 'company']),
   name: z.string().min(2, "სახელი სავალდებულოა"),
   tax_id: z.string().optional(),
   email: z.string().email("არასწორი ელ.ფოსტის ფორმატი").optional().or(z.literal("")),
