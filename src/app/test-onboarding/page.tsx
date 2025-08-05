@@ -32,7 +32,6 @@ export default function TestOnboardingPage() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const supabase = createClient()
 
   const {
     register,
@@ -61,8 +60,8 @@ export default function TestOnboardingPage() {
         router.push("/dashboard")
       }, 1000)
 
-    } catch (error: any) {
-      setError(error.message || "კომპანიის შექმნა ვერ მოხერხდა")
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "კომპანიის შექმნა ვერ მოხერხდა")
       setIsLoading(false)
     }
   }

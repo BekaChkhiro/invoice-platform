@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export function StorageTest() {
-  const [buckets, setBuckets] = useState<any[]>([])
+  const [buckets, setBuckets] = useState<{ id: string; name: string; public: boolean }[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const supabase = createClient()
@@ -36,8 +36,8 @@ export function StorageTest() {
         console.log('Files in avatars bucket:', files)
       }
 
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
     }
@@ -45,7 +45,7 @@ export function StorageTest() {
 
   useEffect(() => {
     testStorage()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const avatarsBucket = buckets.find(b => b.name === 'avatars')
 

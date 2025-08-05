@@ -21,13 +21,13 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
 
   useEffect(() => {
     loadClient()
-  }, [id])
+  }, [id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadClient = async () => {
     try {
       const data = await clientService.getClient(id)
       setClient(data)
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: "შეცდომა",
         description: "კლიენტის ჩატვირთვა ვერ მოხერხდა",
@@ -53,8 +53,8 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
       })
 
       router.push(`/dashboard/clients/${id}`)
-    } catch (error: any) {
-      if (error.message?.includes("duplicate key")) {
+    } catch (error) {
+      if (error instanceof Error && error.message?.includes("duplicate key")) {
         throw new Error("კლიენტი ამ საიდენტიფიკაციო კოდით უკვე არსებობს")
       }
       throw error

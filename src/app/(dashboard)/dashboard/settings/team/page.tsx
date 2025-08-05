@@ -20,7 +20,6 @@ import {
   Shield,
   ShieldCheck,
   Trash2,
-  AlertCircle
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -41,14 +40,14 @@ export default function TeamSettingsPage() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
   const [inviteLoading, setInviteLoading] = useState(false)
-  const [credits, setCredits] = useState<any>(null)
-  const [teamMembers, setTeamMembers] = useState<any[]>([])
+  const [credits, setCredits] = useState<{ user_id: string; total_credits: number; used_credits: number; plan_type: string } | null>(null)
+  const [teamMembers, setTeamMembers] = useState<{ id: string; email: string; full_name: string; role: string; avatar_url: string | null; status: string; invited_at: string }[]>([])
   const [inviteEmail, setInviteEmail] = useState('')
   const supabase = createClient()
 
   useEffect(() => {
     loadTeamData()
-  }, [user])
+  }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadTeamData = async () => {
     if (!user) return
@@ -72,7 +71,7 @@ export default function TeamSettingsPage() {
       setTeamMembers([
         {
           id: user.id,
-          email: user.email,
+          email: user.email || '',
           full_name: 'თქვენ',
           role: 'owner',
           avatar_url: null,
@@ -102,10 +101,10 @@ export default function TeamSettingsPage() {
       
       setInviteEmail('')
       
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "შეცდომა",
-        description: error.message || "მოწვევის გაგზავნა ვერ მოხერხდა",
+        description: error instanceof Error ? error.message : "მოწვევის გაგზავნა ვერ მოხერხდა",
         variant: "destructive",
       })
     } finally {
@@ -219,7 +218,7 @@ export default function TeamSettingsPage() {
                 <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-4">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={member.avatar_url} />
+                      <AvatarImage src={member.avatar_url || undefined} />
                       <AvatarFallback className="bg-primary text-white">
                         {getInitials(member.full_name)}
                       </AvatarFallback>
@@ -228,7 +227,7 @@ export default function TeamSettingsPage() {
                     <div>
                       <div className="flex items-center gap-2">
                         <p className="font-medium">{member.full_name}</p>
-                        <Badge variant={roleInfo.color as any} className="text-xs">
+                        <Badge variant={roleInfo.color as "default" | "secondary" | "destructive" | "outline"} className="text-xs">
                           <RoleIcon className="mr-1 h-3 w-3" />
                           {roleInfo.name}
                         </Badge>

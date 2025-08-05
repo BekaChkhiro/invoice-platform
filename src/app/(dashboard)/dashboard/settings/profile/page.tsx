@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, User, Upload, Mail, Phone, AlertCircle } from "lucide-react"
+import { Loader2, Upload, Mail, AlertCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
 const profileSchema = z.object({
@@ -27,7 +27,7 @@ export default function ProfileSettingsPage() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
-  const [profile, setProfile] = useState<any>(null)
+  const [profile, setProfile] = useState<{ id: string; full_name: string | null; phone: string | null; avatar_url: string | null } | null>(null)
   const supabase = createClient()
 
   const {
@@ -41,12 +41,12 @@ export default function ProfileSettingsPage() {
 
   useEffect(() => {
     loadProfile()
-  }, [user])
+  }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadProfile = async () => {
     if (!user) return
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", user.id)
@@ -78,10 +78,10 @@ export default function ProfileSettingsPage() {
 
       loadProfile()
 
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "შეცდომა",
-        description: error.message || "ცვლილებების შენახვა ვერ მოხერხდა",
+        description: error instanceof Error ? error.message : "ცვლილებების შენახვა ვერ მოხერხდა",
         variant: "destructive",
       })
     } finally {
@@ -126,7 +126,7 @@ export default function ProfileSettingsPage() {
       const filePath = `${user.id}/${fileName}`
 
       // Upload new avatar first
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -182,11 +182,11 @@ export default function ProfileSettingsPage() {
       // Reload profile to get updated data
       await loadProfile()
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Avatar upload error:', error)
       toast({
         title: "შეცდომა",
-        description: error.message || "ავატარის ატვირთვა ვერ მოხერხდა",
+        description: error instanceof Error ? error.message : "ავატარის ატვირთვა ვერ მოხერხდა",
         variant: "destructive",
       })
     } finally {
@@ -232,7 +232,7 @@ export default function ProfileSettingsPage() {
             {/* Avatar Upload */}
             <div className="flex items-center gap-6">
               <Avatar className="h-24 w-24">
-                <AvatarImage src={profile.avatar_url} />
+                <AvatarImage src={profile.avatar_url || undefined} />
                 <AvatarFallback className="bg-primary text-white text-xl">
                   {getInitials(profile.full_name)}
                 </AvatarFallback>
@@ -327,7 +327,7 @@ export default function ProfileSettingsPage() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                პაროლის შეცვლისთვის გამოიყენეთ "პაროლის აღდგენის" ფუნქცია შესვლის გვერდზე
+                პაროლის შეცვლისთვის გამოიყენეთ &quot;პაროლის აღდგენის&quot; ფუნქცია შესვლის გვერდზე
               </AlertDescription>
             </Alert>
           </CardContent>

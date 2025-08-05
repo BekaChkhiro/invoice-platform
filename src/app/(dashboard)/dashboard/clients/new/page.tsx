@@ -41,8 +41,8 @@ export default function NewClientPage() {
       })
 
       router.push("/dashboard/clients")
-    } catch (error: any) {
-      if (error.message?.includes("duplicate key")) {
+    } catch (error) {
+      if (error instanceof Error && error.message?.includes("duplicate key")) {
         throw new Error("კლიენტი ამ საიდენტიფიკაციო კოდით უკვე არსებობს")
       }
       throw error

@@ -58,7 +58,7 @@ export default function ResetPasswordPage() {
         } else {
           setError("არასწორი ან ვადაგასული აღდგენის კოდი")
         }
-      } catch (error) {
+      } catch (_error) {
         setError("კოდის შემოწმება ვერ მოხერხდა")
       } finally {
         setValidatingCode(false)
@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
       } else {
         setError(result.message || "პაროლის განახლება ვერ მოხერხდა")
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Update password exception:', error)
       setError("პაროლის განახლება ვერ მოხერხდა")
     } finally {

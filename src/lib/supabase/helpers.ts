@@ -47,8 +47,8 @@ export async function getProfile(userId: string) {
     }
     
     return { data, error }
-  } catch (fetchError: any) {
-    console.log('⚠️ Network error fetching profile, returning mock data:', fetchError.message)
+  } catch (fetchError) {
+    console.log('⚠️ Network error fetching profile, returning mock data:', fetchError instanceof Error ? fetchError.message : String(fetchError))
     return { 
       data: { 
         id: userId,
@@ -94,8 +94,8 @@ export async function getCompany(userId: string) {
     }
     
     return { data, error }
-  } catch (fetchError: any) {
-    console.log('⚠️ Network error fetching company, returning mock data:', fetchError.message)
+  } catch (fetchError) {
+    console.log('⚠️ Network error fetching company, returning mock data:', fetchError instanceof Error ? fetchError.message : String(fetchError))
     return { 
       data: { 
         id: 'mock-company-id', 
@@ -142,8 +142,8 @@ export async function getUserCredits(userId: string) {
     }
     
     return { data, error }
-  } catch (fetchError: any) {
-    console.log('⚠️ Network error fetching user credits, returning mock data:', fetchError.message)
+  } catch (fetchError) {
+    console.log('⚠️ Network error fetching user credits, returning mock data:', fetchError instanceof Error ? fetchError.message : String(fetchError))
     return { 
       data: { 
         id: 'mock-credits-id',

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 import { 
   Loader2, 
   CreditCard, 
@@ -15,8 +14,6 @@ import {
   CheckCircle, 
   XCircle,
   Calendar,
-  Zap,
-  Users,
   FileText,
   Infinity
 } from "lucide-react"
@@ -81,13 +78,13 @@ export default function BillingSettingsPage() {
   const { user } = useAuth()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(true)
-  const [credits, setCredits] = useState<any>(null)
-  const [billingHistory, setBillingHistory] = useState<any[]>([])
+  const [credits, setCredits] = useState<{ user_id: string; total_credits: number; used_credits: number; plan_type: string } | null>(null)
+  const [billingHistory, setBillingHistory] = useState<{ id: string; date: string; amount: number; description: string }[]>([])
   const supabase = createClient()
 
   useEffect(() => {
     loadBillingData()
-  }, [user])
+  }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadBillingData = async () => {
     if (!user) return
@@ -96,7 +93,7 @@ export default function BillingSettingsPage() {
 
     try {
       // Load user credits
-      const { data: creditsData, error: creditsError } = await supabase
+      const { data: creditsData } = await supabase
         .from('user_credits')
         .select('*')
         .eq('user_id', user.id)
@@ -143,7 +140,7 @@ export default function BillingSettingsPage() {
     return ((credits.total_credits - credits.used_credits) / credits.total_credits) * 100
   }
 
-  const handleUpgrade = (planId: string) => {
+  const handleUpgrade = (_planId: string) => {
     toast({
       title: "განახლება",
       description: "გადახდის სისტემა მალე ხელმისაწვდომი იქნება",
@@ -232,8 +229,8 @@ export default function BillingSettingsPage() {
             return (
               <Card key={plan.id} className={cn(
                 "relative",
-                isCurrentPlan && "border-primary",
-                isPopular && "border-2 border-primary"
+                isCurrentPlan ? "border-primary" : "",
+                isPopular ? "border-2 border-primary" : ""
               )}>
                 {isPopular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">

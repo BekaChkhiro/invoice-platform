@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation"
-import { requireAuth, getCompany } from "@/lib/supabase/helpers"
+import { requireAuth } from "@/lib/supabase/helpers"
 import { Sidebar } from "@/components/layout/sidebar"
 import { TopBar } from "@/components/layout/topbar"
 import { MobileNav } from "@/components/layout/mobile-nav"
@@ -10,7 +9,7 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   // Check authentication
-  const user = await requireAuth()
+  await requireAuth()
 
   return (
     <div className="min-h-screen bg-gray-50">

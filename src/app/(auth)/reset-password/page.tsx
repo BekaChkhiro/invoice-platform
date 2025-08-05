@@ -38,7 +38,7 @@ export default function ResetPasswordPage() {
         setError(result.message || "პაროლის აღდგენა ვერ მოხერხდა")
       }
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Reset password exception:', error)
       setError("პაროლის აღდგენა ვერ მოხერხდა")
     } finally {

@@ -66,7 +66,7 @@ export default function RegisterPage() {
         setError(result.message || "რეგისტრაცია ვერ მოხერხდა")
       }
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Registration exception:', error)
       setError("რეგისტრაცია ვერ მოხერხდა")
     } finally {

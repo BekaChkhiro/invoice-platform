@@ -78,7 +78,7 @@ export async function GET(request: Request) {
 /**
  * Create user profile and credits if they don't exist
  */
-async function createUserProfileAndCredits(supabase: any, user: any) {
+async function createUserProfileAndCredits(supabase: Awaited<ReturnType<typeof createClient>>, user: { id: string; email?: string }) {
   try {
     // Check if profile already exists
     const { data: existingProfile, error: profileCheckError } = await supabase

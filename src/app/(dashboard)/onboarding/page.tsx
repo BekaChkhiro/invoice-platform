@@ -62,12 +62,12 @@ export default function OnboardingPage() {
         .from("companies")
         .insert({
           user_id: user.id,
-          name: data.name || "ჩემი კომპანია",
           invoice_prefix: "INV",
           invoice_counter: 1,
           vat_rate: 18,
           currency: "GEL",
           ...data,
+          name: data.name || "ჩემი კომპანია",
         })
         .select()
 
@@ -84,9 +84,9 @@ export default function OnboardingPage() {
       router.push("/dashboard")
       router.refresh()
 
-    } catch (error: any) {
+    } catch (error) {
       console.error("Company creation error:", error)
-      setError(error.message || "კომპანიის შექმნა ვერ მოხერხდა")
+      setError(error instanceof Error ? error.message : "კომპანიის შექმნა ვერ მოხერხდა")
     } finally {
       setIsLoading(false)
     }

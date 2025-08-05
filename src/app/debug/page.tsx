@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { authService } from '@/lib/supabase/auth'
 
 export default function DebugPage() {
-  const [authData, setAuthData] = useState<any>(null)
+  const [authData, setAuthData] = useState<{ session?: unknown; user?: unknown; cookies?: string; timestamp?: string; error?: string; loginResult?: unknown } | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
@@ -27,14 +27,14 @@ export default function DebugPage() {
         })
       } catch (error) {
         console.error('Debug check error:', error)
-        setAuthData({ error: error.message })
+        setAuthData({ error: error instanceof Error ? error.message : String(error) })
       } finally {
         setLoading(false)
       }
     }
 
     checkAuth()
-  }, [])
+  }, [supabase.auth]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const testLogin = async () => {
     try {

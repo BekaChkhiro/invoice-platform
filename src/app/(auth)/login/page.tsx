@@ -59,7 +59,7 @@ export default function LoginPage() {
         setError(result.message || "შესვლა ვერ მოხერხდა")
       }
 
-    } catch (error: any) {
+    } catch (error) {
       console.error('Login exception:', error)
       setError("შესვლა ვერ მოხერხდა")
     } finally {

@@ -45,9 +45,9 @@ export default function ClientsPage() {
   const { user } = useAuth()
   const { toast } = useToast()
   const [clients, setClients] = useState<Client[]>([])
-  const [stats, setStats] = useState<any>(null)
+  const [stats, setStats] = useState<{ total: number; active: number; individuals: number; companies: number } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [company, setCompany] = useState<any>(null)
+  const [company, setCompany] = useState<{ id: string; user_id: string; name: string; invoice_prefix: string; invoice_counter: number; vat_rate: number; currency: string } | null>(null)
   const [deleteClient, setDeleteClient] = useState<Client | null>(null)
   const supabase = createClient()
 
@@ -57,7 +57,7 @@ export default function ClientsPage() {
 
   useEffect(() => {
     loadData()
-  }, [user])
+  }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     if (!user) return
@@ -99,7 +99,7 @@ export default function ClientsPage() {
       const statsData = await clientService.getClientStats(companyData.id)
       setStats(statsData)
 
-    } catch (error: any) {
+    } catch (_error) {
       toast({
         title: "შეცდომა",
         description: "კლიენტების ჩატვირთვა ვერ მოხერხდა",
@@ -392,7 +392,7 @@ export default function ClientsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>დარწმუნებული ხართ?</AlertDialogTitle>
             <AlertDialogDescription>
-              კლიენტი "{deleteClient?.name}" სამუდამოდ წაიშლება. ეს მოქმედება ვერ დაბრუნდება.
+              კლიენტი &quot;{deleteClient?.name}&quot; სამუდამოდ წაიშლება. ეს მოქმედება ვერ დაბრუნდება.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -71,9 +71,9 @@ const settingsNavigation = [
 export function Sidebar() {
   const pathname = usePathname()
   const { user, signOut } = useAuth()
-  const [profile, setProfile] = useState<any>(null)
-  const [credits, setCredits] = useState<any>(null)
-  const [company, setCompany] = useState<any>(null)
+  const [profile, setProfile] = useState<{ id: string; full_name: string | null; avatar_url: string | null } | null>(null)
+  const [credits, setCredits] = useState<{ user_id: string; total_credits: number; used_credits: number; plan_type: string } | null>(null)
+  const [company, setCompany] = useState<{ id: string; name: string } | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
   const supabase = createClient()
@@ -82,7 +82,7 @@ export function Sidebar() {
     if (user) {
       loadUserData()
     }
-  }, [user])
+  }, [user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Hydration effect - runs only on client after mount
   useEffect(() => {
@@ -116,7 +116,7 @@ export function Sidebar() {
 
     try {
       // Load user profile
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
@@ -127,7 +127,7 @@ export function Sidebar() {
       }
 
       // Load user credits
-      const { data: creditsData, error: creditsError } = await supabase
+      const { data: creditsData } = await supabase
         .from('user_credits')
         .select('*')
         .eq('user_id', user.id)
@@ -146,7 +146,7 @@ export function Sidebar() {
       }
 
       // Load user company
-      const { data: companyData, error: companyError } = await supabase
+      const { data: companyData } = await supabase
         .from('companies')
         .select('*')
         .eq('user_id', user.id)

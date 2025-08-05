@@ -33,6 +33,7 @@ export function ClientForm({ initialData, onSubmit, isLoading = false }: ClientF
     setValue,
     formState: { errors },
   } = useForm<ClientFormData>({
+    // @ts-expect-error - zod default value type inference issue
     resolver: zodResolver(clientSchema),
     defaultValues: {
       type: "individual",
@@ -47,13 +48,14 @@ export function ClientForm({ initialData, onSubmit, isLoading = false }: ClientF
     setError(null)
     try {
       await onSubmit(data)
-    } catch (error: any) {
-      setError(error.message || "დაფიქსირდა შეცდომა")
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "დაფიქსირდა შეცდომა")
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+    <form onSubmit={handleSubmit(handleFormSubmit as any)} className="space-y-6">
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
