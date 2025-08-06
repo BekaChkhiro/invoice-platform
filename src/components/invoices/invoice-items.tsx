@@ -285,8 +285,7 @@ function InvoiceItemRow({
                   min="0"
                   step="0.001"
                   className="border-0 shadow-none focus-visible:ring-1 focus-visible:ring-primary text-right"
-                  {...field}
-                  value={field.value || ''}
+                  value={field.value?.toString() || ''}
                   onChange={(e) => {
                     const value = e.target.value
                     field.onChange(value === '' ? 0 : parseFloat(value))
@@ -315,8 +314,7 @@ function InvoiceItemRow({
                     min="0"
                     step="0.01"
                     className="border-0 shadow-none focus-visible:ring-1 focus-visible:ring-primary text-right pr-8"
-                    {...field}
-                    value={field.value || ''}
+                    value={field.value?.toString() || ''}
                     onChange={(e) => {
                       const value = e.target.value
                       field.onChange(value === '' ? 0 : parseFloat(value))

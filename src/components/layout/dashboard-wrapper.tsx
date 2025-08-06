@@ -4,12 +4,16 @@ import { QueryProvider } from '@/components/providers/query-provider'
 import { Sidebar } from '@/components/layout/sidebar'
 import { TopBar } from '@/components/layout/topbar'
 import { MobileNav } from '@/components/layout/mobile-nav'
+import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts'
 
 interface DashboardWrapperProps {
   children: React.ReactNode
 }
 
 export function DashboardWrapper({ children }: DashboardWrapperProps) {
+  // Initialize global keyboard shortcuts
+  useKeyboardShortcuts()
+
   return (
     <QueryProvider>
       <div className="min-h-screen bg-gray-50">

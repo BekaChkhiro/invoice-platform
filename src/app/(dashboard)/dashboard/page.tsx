@@ -142,7 +142,10 @@ function DashboardContent() {
               )}
             </div>
             
-            <div className="mt-2 sm:mt-0">
+            <div className="mt-2 sm:mt-0 flex items-center gap-4">
+              <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                დაჭირეთ ? მალსახმობისთვის
+              </span>
               <span>© 2024 Invoice Platform</span>
             </div>
           </div>

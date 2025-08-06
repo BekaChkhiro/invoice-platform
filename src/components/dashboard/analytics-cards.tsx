@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { TrendingUp, TrendingDown, FileText, Users, Calculator, CreditCard } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -32,6 +33,8 @@ interface StatCard {
 // =====================================
 
 export function AnalyticsCards({ stats, loading }: AnalyticsCardsProps) {
+  const router = useRouter()
+
   if (loading) {
     return <AnalyticsCardsSkeleton />
   }
@@ -66,7 +69,7 @@ export function AnalyticsCards({ stats, loading }: AnalyticsCardsProps) {
       icon: CreditCard,
       description: 'ამ თვეში',
       color: 'text-green-600',
-      href: '/dashboard/analytics/revenue'
+      href: '/dashboard/invoices?filter=paid'
     },
     {
       title: 'ინვოისების რაოდენობა',
@@ -96,14 +99,14 @@ export function AnalyticsCards({ stats, loading }: AnalyticsCardsProps) {
       icon: Calculator,
       description: 'ინვოისის საშუალო',
       color: 'text-orange-600',
-      href: '/dashboard/analytics/averages'
+      href: '/dashboard/invoices?sort=amount'
     }
   ]
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {statCards.map((card, index) => (
-        <StatCard key={index} {...card} />
+        <StatCard key={index} {...card} onNavigate={router.push} />
       ))}
     </div>
   )
@@ -113,7 +116,9 @@ export function AnalyticsCards({ stats, loading }: AnalyticsCardsProps) {
 // INDIVIDUAL STAT CARD COMPONENT
 // =====================================
 
-interface StatCardProps extends StatCard {}
+interface StatCardProps extends StatCard {
+  onNavigate?: (href: string) => void
+}
 
 function StatCard({
   title,
@@ -123,12 +128,12 @@ function StatCard({
   icon: IconComponent,
   description,
   color,
-  href
+  href,
+  onNavigate
 }: StatCardProps) {
   const handleClick = () => {
-    if (href) {
-      // In a real app, you'd use Next.js router
-      console.log('Navigate to:', href)
+    if (href && onNavigate) {
+      onNavigate(href)
     }
   }
 
@@ -204,41 +209,51 @@ interface DetailedStatsProps {
 }
 
 export function DetailedAnalyticsCards({ stats }: DetailedStatsProps) {
+  const router = useRouter()
+  
   const cards = [
     {
       title: 'გადახდილი',
       value: stats.paidCount,
       amount: stats.paidAmount,
       color: 'bg-green-50 text-green-700 border-green-200',
-      icon: '✅'
+      icon: '✅',
+      href: '/dashboard/invoices?status=paid'
     },
     {
       title: 'მოლოდინში',
       value: stats.sentCount,
       amount: stats.pendingAmount,
       color: 'bg-blue-50 text-blue-700 border-blue-200',
-      icon: '📤'
+      icon: '📤',
+      href: '/dashboard/invoices?status=sent'
     },
     {
       title: 'ვადაგადაცილებული',
       value: stats.overdueCount,
       amount: stats.overdueAmount,
       color: 'bg-red-50 text-red-700 border-red-200',
-      icon: '⏰'
+      icon: '⏰',
+      href: '/dashboard/invoices?status=overdue'
     },
     {
       title: 'მონახაზები',
       value: stats.draftCount,
       amount: 0,
       color: 'bg-gray-50 text-gray-700 border-gray-200',
-      icon: '📝'
+      icon: '📝',
+      href: '/dashboard/invoices?status=draft'
     }
   ]
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((card, index) => (
-        <Card key={index} className={`border-2 ${card.color}`}>
+        <Card 
+          key={index} 
+          className={`border-2 ${card.color} cursor-pointer hover:scale-[1.02] transition-all duration-200`}
+          onClick={() => card.href && router.push(card.href)}
+        >
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-2xl">{card.icon}</span>

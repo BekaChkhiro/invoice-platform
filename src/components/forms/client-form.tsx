@@ -72,7 +72,7 @@ export function ClientForm({ initialData, onSubmit, isLoading = false }: ClientF
         </CardHeader>
         <CardContent>
           <RadioGroup
-            value={clientType}
+            value={clientType || 'individual'}
             onValueChange={(value) => setValue("type", value as "individual" | "company")}
             disabled={isLoading}
           >

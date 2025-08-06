@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 
 import { cn } from '@/lib/utils'
+import { useHaptics } from '@/lib/utils/haptics'
 
 interface MobileNavItem {
   id: string
@@ -32,6 +33,7 @@ interface FloatingActionItem {
 export function MobileNav() {
   const pathname = usePathname()
   const router = useRouter()
+  const { buttonPress, selectionChange } = useHaptics()
   
   const [isVisible, setIsVisible] = useState(true)
   const [isScrolling, setIsScrolling] = useState(false)
@@ -125,7 +127,10 @@ export function MobileNav() {
   }
 
   const handleNavItemClick = (item: MobileNavItem) => {
+    buttonPress() // Haptic feedback
+    
     if (item.id === 'more') {
+      // More menu will be handled by the Sheet component
       return
     }
     
@@ -154,12 +159,22 @@ export function MobileNav() {
         <div className="bg-white border-t border-gray-200 px-2 py-1 safe-area-bottom">
           <div className="flex items-center justify-around">
             {navItems.map((item) => (
-              <NavItem
-                key={item.id}
-                item={item}
-                isActive={isActiveRoute(item.href)}
-                onClick={() => handleNavItemClick(item)}
-              />
+              item.id === 'more' ? (
+                <MoreMenu key={item.id} trigger={
+                  <NavItem
+                    item={item}
+                    isActive={false}
+                    onClick={() => handleNavItemClick(item)}
+                  />
+                } />
+              ) : (
+                <NavItem
+                  key={item.id}
+                  item={item}
+                  isActive={isActiveRoute(item.href)}
+                  onClick={() => handleNavItemClick(item)}
+                />
+              )
             ))}
           </div>
         </div>
@@ -203,6 +218,7 @@ export function MobileNav() {
                     className={`h-12 w-12 rounded-full shadow-lg ${item.color}`}
                     onClick={(e) => {
                       e.stopPropagation()
+                      buttonPress() // Haptic feedback
                       item.onClick()
                       setFabOpen(false)
                     }}
