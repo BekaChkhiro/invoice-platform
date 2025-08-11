@@ -83,7 +83,7 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
     postal_code: client.postal_code || undefined,
     contact_person: client.contact_person || undefined,
     notes: client.notes || undefined,
-    is_active: client.is_active,
+    is_active: client.is_active ?? true,
   }
 
   return (

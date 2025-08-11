@@ -43,6 +43,16 @@ export default function OnboardingPage() {
     formState: { errors },
   } = useForm<CompanyFormData>({
     resolver: zodResolver(companySchema),
+    defaultValues: {
+      name: '',
+      tax_id: '',
+      address_line1: '',
+      city: '',
+      postal_code: '',
+      phone: '',
+      email: '',
+      website: '',
+    },
   })
 
   const onSubmit = async (data: CompanyFormData) => {

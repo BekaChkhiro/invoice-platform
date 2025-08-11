@@ -416,12 +416,15 @@ export class AuthService {
         return true
       }
 
-      // Create profile
+      // Create profile with full_name field (matching actual database schema)
       const { error: profileError } = await this.supabase
         .from('profiles')
         .insert({
           id: user.id,
           email: user.email || '',
+          full_name: null, // User can update this later
+          phone: null,
+          avatar_url: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -439,6 +442,7 @@ export class AuthService {
           total_credits: 5,
           used_credits: 0,
           plan_type: 'free',
+          plan_expires_at: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })

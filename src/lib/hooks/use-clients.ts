@@ -6,8 +6,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useDebounce } from './use-debounce'
 
-import * as clientService from '@/lib/services/client'
-import type { Client, CreateClient, UpdateClient, ClientFilter } from '@/lib/services/client'
+import { clientService } from '@/lib/services/client'
+import type { ClientFormData, ClientFilter } from '@/lib/validations/client'
 
 // Extended types for client management
 export interface ClientFilters {
@@ -100,7 +100,7 @@ export function useClients(filter: ClientFilter = {}) {
 export function useClient(clientId: string) {
   return useQuery({
     queryKey: clientKeys.detail(clientId),
-    queryFn: () => clientService.getClientById(clientId),
+    queryFn: () => clientService.getClient(clientId),
     enabled: !!clientId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

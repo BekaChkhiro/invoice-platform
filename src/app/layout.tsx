@@ -7,7 +7,6 @@ export const metadata = {
   title: 'Invoice Platform - ინვოისის პლატფორმა',
   description: 'მარტივი და ეფექტური ინვოისების მართვა ქართული ბიზნესებისთვის',
   manifest: '/manifest.json',
-  themeColor: '#0ea5e9',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -27,18 +26,19 @@ export const metadata = {
     title: 'Invoice Platform - ინვოისის პლატფორმა',
     description: 'მარტივი და ეფექტური ინვოისების მართვა ქართული ბიზნესებისთვის',
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-    themeColor: '#0ea5e9',
-  },
   icons: {
     icon: '/icons/icon-192.png',
     shortcut: '/icons/icon-192.png',
     apple: '/icons/icon-192.png',
   },
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#0ea5e9',
 }
 
 export default function RootLayout({

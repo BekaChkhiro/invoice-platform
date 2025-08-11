@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Check authentication
@@ -35,7 +36,7 @@ export async function PATCH(
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('id, is_active, name')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('company_id', company.id)
       .single()
 
@@ -54,7 +55,7 @@ export async function PATCH(
       const { data: pendingInvoices, error: invoicesError } = await supabase
         .from('invoices')
         .select('id, invoice_number, status')
-        .eq('client_id', params.id)
+        .eq('client_id', id)
         .eq('company_id', company.id)
         .in('status', ['draft', 'sent', 'overdue'])
         .limit(1)
@@ -81,7 +82,7 @@ export async function PATCH(
         is_active: newStatus,
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select('id, is_active, name')
       .single()
 

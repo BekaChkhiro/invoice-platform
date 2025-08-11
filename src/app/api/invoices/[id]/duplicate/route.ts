@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Check authentication
@@ -61,7 +62,7 @@ export async function POST(
         *,
         items:invoice_items(*)
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('company_id', company.id)
       .single()
 
@@ -79,7 +80,7 @@ export async function POST(
 
     // Create duplicate invoice data
     const { 
-      id, 
+      id: originalId, 
       invoice_number, 
       status, 
       created_at, 
@@ -118,7 +119,7 @@ export async function POST(
 
     // Duplicate invoice items if they exist
     if (items && items.length > 0) {
-      const newItems = items.map((item: any) => ({
+      const newItems = items.map((item: { description: string; quantity: number; unit_price: number; line_total: number; sort_order: number }) => ({
         invoice_id: newInvoice.id,
         description: item.description,
         quantity: item.quantity,
@@ -187,14 +188,14 @@ export async function POST(
       return NextResponse.json({
         ...newInvoice,
         message: 'ინვოისი წარმატებით დუბლირდა',
-        originalInvoiceId: params.id
+        originalInvoiceId: id
       }, { status: 201 })
     }
 
     return NextResponse.json({
       ...completeInvoice,
       message: 'ინვოისი წარმატებით დუბლირდა',
-      originalInvoiceId: params.id
+      originalInvoiceId: id
     }, { status: 201 })
 
   } catch (error) {

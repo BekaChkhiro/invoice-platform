@@ -43,6 +43,10 @@ function ResetPasswordForm() {
     formState: { errors },
   } = useForm<UpdatePasswordInput>({
     resolver: zodResolver(updatePasswordSchema),
+    defaultValues: {
+      password: '',
+      confirmPassword: '',
+    },
   })
 
   useEffect(() => {

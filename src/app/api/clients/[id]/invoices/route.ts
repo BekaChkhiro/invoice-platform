@@ -14,9 +14,10 @@ const invoiceFilterSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Check authentication
@@ -46,7 +47,7 @@ export async function GET(
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('id, name')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('company_id', company.id)
       .single()
 
@@ -86,7 +87,7 @@ export async function GET(
         *,
         items:invoice_items(count)
       `, { count: 'exact' })
-      .eq('client_id', params.id)
+      .eq('client_id', id)
       .eq('company_id', company.id)
 
     // Apply filters
@@ -130,7 +131,7 @@ export async function GET(
     const allInvoicesQuery = supabase
       .from('invoices')
       .select('total, status')
-      .eq('client_id', params.id)
+      .eq('client_id', id)
       .eq('company_id', company.id)
 
     if (filters.status !== 'all') {

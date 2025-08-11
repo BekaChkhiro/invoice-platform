@@ -24,7 +24,6 @@ interface ClientSearchResponse {
  */
 export function useClientSearch() {
   const [query, setQuery] = useState('')
-  const [recentClients, setRecentClients] = useState<ClientSearchResult[]>([])
   const [isClient, setIsClient] = useState(false)
   const debouncedQuery = useDebounce(query, 300)
 
@@ -84,45 +83,17 @@ export function useClientSearch() {
     gcTime: 10 * 60 * 1000
   })
 
-  // Get recent clients when component mounts - only on client
-  useEffect(() => {
-    if (isClient) {
-      const stored = localStorage.getItem('recentClients')
-      if (stored) {
-        try {
-          setRecentClients(JSON.parse(stored))
-        } catch (error) {
-          console.warn('Failed to parse recent clients from localStorage')
-          localStorage.removeItem('recentClients')
-        }
-      }
-    }
-  }, [isClient])
-
-  // Add client to recent clients
-  const addToRecentClients = (client: ClientSearchResult) => {
-    const updated = [
-      client,
-      ...recentClients.filter(c => c.id !== client.id)
-    ].slice(0, 5) // Keep only last 5
-
-    setRecentClients(updated)
-    if (isClient) {
-      localStorage.setItem('recentClients', JSON.stringify(updated))
-    }
-  }
+  // No local storage logic needed anymore
 
   // Clear search
   const clearSearch = () => {
     setQuery('')
   }
 
-  // Get suggestions (search results when query exists, recent clients or all clients when no query)
+  // Get suggestions (search results when query exists, otherwise empty)
   const suggestions = debouncedQuery.trim() 
     ? searchResults?.results || []
-    : recentClients.length > 0 
-      ? recentClients 
-      : allClients?.slice(0, 10) || []
+    : []
 
   const isLoading = debouncedQuery.trim().length > 0 ? searchLoading : allClientsLoading
 
@@ -133,9 +104,7 @@ export function useClientSearch() {
     isLoading,
     error,
     hasQuery: debouncedQuery.trim().length > 0,
-    addToRecentClients,
     clearSearch,
-    recentClients,
     allClients: allClients || [],
     isClient
   }

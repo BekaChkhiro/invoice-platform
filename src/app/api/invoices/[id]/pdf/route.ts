@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Check authentication
@@ -58,7 +59,7 @@ export async function GET(
           sort_order
         )
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('company_id', company.id)
       .order('sort_order', { foreignTable: 'invoice_items', ascending: true })
       .single()
@@ -94,23 +95,23 @@ export async function GET(
       )
     }
 
-    // Check if we got a blob response
-    if (!pdfResult || !(pdfResult instanceof Blob)) {
-      console.error('Invalid PDF response:', pdfResult)
+    // Check if we got a valid response
+    if (!pdfResult) {
+      console.error('No response from PDF function')
       return NextResponse.json(
-        { error: 'PDF-ის ფორმატი არასწორია' },
+        { error: 'PDF-ის გენერაცია ვერ მოხერხდა' },
         { status: 500 }
       )
     }
 
     // Create filename
-    const filename = `invoice-${invoice.invoice_number || invoice.id.slice(0, 8)}.pdf`
+    const filename = `invoice-${invoice.invoice_number || invoice.id.slice(0, 8)}.html`
 
-    // Return PDF as response
+    // Return HTML that can be printed as PDF
     return new NextResponse(pdfResult, {
       status: 200,
       headers: {
-        'Content-Type': 'application/pdf',
+        'Content-Type': 'text/html; charset=utf-8',
         'Content-Disposition': `inline; filename="${filename}"`,
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',

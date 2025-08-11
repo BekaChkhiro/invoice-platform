@@ -71,6 +71,7 @@ export function useInvoiceForm() {
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceFormSchema),
     defaultValues: {
+      client_id: '',
       issue_date: new Date(),
       due_days: 14,
       currency: 'GEL',
@@ -272,7 +273,33 @@ export function useInvoiceForm() {
         if (data.issue_date) {
           data.issue_date = new Date(data.issue_date)
         }
-        form.reset(data)
+        
+        // Ensure all fields have default values to prevent uncontrolled/controlled warnings
+        const cleanData = {
+          client_id: data.client_id || '',
+          issue_date: data.issue_date || new Date(),
+          due_days: data.due_days ?? 14,
+          currency: data.currency || 'GEL',
+          vat_rate: data.vat_rate ?? 18,
+          notes: data.notes || '',
+          payment_instructions: data.payment_instructions || '',
+          send_immediately: data.send_immediately ?? false,
+          items: data.items ? data.items.map((item: any, index: number) => ({
+            description: item.description || '',
+            quantity: item.quantity ?? 1,
+            unit_price: item.unit_price ?? 0,
+            line_total: item.line_total ?? 0,
+            sort_order: item.sort_order ?? index
+          })) : [{
+            description: '',
+            quantity: 1,
+            unit_price: 0,
+            line_total: 0,
+            sort_order: 0
+          }]
+        }
+        
+        form.reset(cleanData)
         return true
       }
     } catch (error) {

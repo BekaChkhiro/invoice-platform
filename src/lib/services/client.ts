@@ -50,17 +50,131 @@ export const clientService = {
   async createClient(companyId: string, data: ClientFormData) {
     const supabase = createClient()
     
-    const { data: client, error } = await supabase
-      .from('clients')
-      .insert({
-        company_id: companyId,
+    try {
+      // Comprehensive duplicate checks before insertion
+      const duplicateChecks = []
+      
+      // Check for duplicate tax_id (for companies)
+      if (data.type === 'company' && data.tax_id) {
+        duplicateChecks.push(
+          supabase
+            .from('clients')
+            .select('id, name')
+            .eq('company_id', companyId)
+            .eq('tax_id', data.tax_id)
+            .maybeSingle()
+        )
+      }
+      
+      // Check for duplicate email (if provided)
+      if (data.email && data.email.trim() !== '') {
+        duplicateChecks.push(
+          supabase
+            .from('clients')
+            .select('id, name')
+            .eq('company_id', companyId)
+            .eq('email', data.email.trim())
+            .maybeSingle()
+        )
+      }
+      
+      // Check for duplicate name (exact match)
+      if (data.name && data.name.trim() !== '') {
+        duplicateChecks.push(
+          supabase
+            .from('clients')
+            .select('id, name')
+            .eq('company_id', companyId)
+            .eq('name', data.name.trim())
+            .maybeSingle()
+        )
+      }
+      
+      // Execute all duplicate checks
+      if (duplicateChecks.length > 0) {
+        const results = await Promise.all(duplicateChecks)
+        
+        // Check tax_id duplicate
+        if (data.type === 'company' && data.tax_id && results[0]?.data) {
+          throw new Error(`კლიენტი საიდენტიფიკაციო კოდით "${data.tax_id}" უკვე არსებობს`)
+        }
+        
+        // Check email duplicate
+        let emailCheckIndex = data.type === 'company' && data.tax_id ? 1 : 0
+        if (data.email && data.email.trim() !== '' && results[emailCheckIndex]?.data) {
+          throw new Error(`კლიენტი ელ.ფოსტით "${data.email}" უკვე არსებობს`)
+        }
+        
+        // Check name duplicate
+        let nameCheckIndex = emailCheckIndex + (data.email && data.email.trim() !== '' ? 1 : 0)
+        if (data.name && results[nameCheckIndex]?.data) {
+          throw new Error(`კლიენტი სახელით "${data.name}" უკვე არსებობს`)
+        }
+      }
+      
+      // Clean the data before insertion
+      const cleanData = {
         ...data,
+        name: data.name?.trim(),
+        email: data.email?.trim() || null,
+        tax_id: data.tax_id?.trim() || null,
+        phone: data.phone?.trim() || null,
+        address_line1: data.address_line1?.trim() || null,
+        address_line2: data.address_line2?.trim() || null,
+        city: data.city?.trim() || null,
+        postal_code: data.postal_code?.trim() || null,
+        contact_person: data.contact_person?.trim() || null,
+        notes: data.notes?.trim() || null,
+      }
+      
+      // Remove empty strings and convert to null
+      Object.keys(cleanData).forEach(key => {
+        const typedKey = key as keyof typeof cleanData
+        if (cleanData[typedKey] === '') {
+          (cleanData as any)[typedKey] = null
+        }
       })
-      .select()
-      .single()
+      
+      const { data: client, error } = await supabase
+        .from('clients')
+        .insert({
+          company_id: companyId,
+          ...cleanData,
+        })
+        .select()
+        .single()
 
-    if (error) throw error
-    return client
+      if (error) {
+        console.error('Supabase client creation error:', error)
+        
+        // Handle specific error codes
+        if (error.code === '23505') { // Unique constraint violation
+          // Try to determine which field caused the conflict
+          if (error.message.includes('tax_id')) {
+            throw new Error('ამ საიდენტიფიკაციო კოდით კლიენტი უკვე არსებობს')
+          } else if (error.message.includes('email')) {
+            throw new Error('ამ ელ.ფოსტით კლიენტი უკვე არსებობს')
+          } else if (error.message.includes('name')) {
+            throw new Error('ამ სახელით კლიენტი უკვე არსებობს')
+          } else {
+            throw new Error('ამ მონაცემებით კლიენტი უკვე არსებობს')
+          }
+        } else if (error.code === '23502') { // Not null constraint violation
+          throw new Error('ყველა სავალდებულო ველი უნდა იყოს შევსებული')
+        } else if (error.code === '23514') { // Check constraint violation
+          throw new Error('მონაცემები არ აკმაყოფილებს მოთხოვნებს')
+        }
+        
+        throw new Error(`კლიენტის დამატება ვერ მოხერხდა: ${error.message}`)
+      }
+      
+      return client
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error
+      }
+      throw new Error('კლიენტის დამატება ვერ მოხერხდა')
+    }
   },
 
   // Update client

@@ -87,41 +87,7 @@ const handleError = (error: any, context: string): string => {
   return error?.message || 'დაფიქსირდა შეცდომა'
 }
 
-/**
- * Check if user has available credits
- */
-const checkUserCredits = async (userId: string): Promise<{ hasCredits: boolean; availableCredits: number }> => {
-  const supabase = getSupabase()
-  
-  const { data, error } = await supabase
-    .from('user_credits')
-    .select('available_credits')
-    .eq('user_id', userId)
-    .single()
-  
-  if (error || !data) {
-    return { hasCredits: false, availableCredits: 0 }
-  }
-  
-  return { 
-    hasCredits: data.available_credits > 0, 
-    availableCredits: data.available_credits 
-  }
-}
-
-/**
- * Update user credits
- */
-const updateUserCredits = async (userId: string, change: number): Promise<boolean> => {
-  const supabase = getSupabase()
-  
-  const { error } = await supabase.rpc('update_user_credits', {
-    p_user_id: userId,
-    p_credit_change: change
-  })
-  
-  return !error
-}
+// Credit system removed - all features are now unlimited
 
 // =====================================
 // MAIN SERVICE FUNCTIONS
@@ -225,7 +191,10 @@ export const getInvoice = async (id: string): Promise<ServiceResult<InvoiceWithD
           email,
           type,
           phone,
-          address,
+          address_line1,
+          address_line2,
+          city,
+          postal_code,
           tax_id
         ),
         items:invoice_items(
@@ -244,6 +213,13 @@ export const getInvoice = async (id: string): Promise<ServiceResult<InvoiceWithD
       return {
         data: null,
         error: handleError(error, 'getInvoice')
+      }
+    }
+    
+    if (!data) {
+      return {
+        data: null,
+        error: 'ინვოისი ვერ მოიძებნა'
       }
     }
     
@@ -280,11 +256,7 @@ export const createInvoice = async (data: CreateInvoice): Promise<ServiceResult<
       return { data: null, error: 'მომხმარებელი ვერ მოიძებნა' }
     }
     
-    // Check user credits
-    const { hasCredits } = await checkUserCredits(user.id)
-    if (!hasCredits) {
-      return { data: null, error: 'არასაკმარისი კრედიტები ინვოისის შესაქმნელად' }
-    }
+    // No credit check needed - unlimited access
     
     // Calculate due_date
     const due_date = new Date(data.issue_date)
@@ -364,11 +336,7 @@ export const createInvoice = async (data: CreateInvoice): Promise<ServiceResult<
       }
     }
     
-    // Deduct credit from user
-    const creditUpdated = await updateUserCredits(user.id, -1)
-    if (!creditUpdated) {
-      console.warn('Failed to update user credits after invoice creation')
-    }
+    // No credit deduction - unlimited access
     
     // Calculate totals using database function
     await supabase.rpc('calculate_invoice_totals', { p_invoice_id: invoiceData.id })

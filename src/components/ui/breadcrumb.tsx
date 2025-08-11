@@ -226,3 +226,18 @@ export function BreadcrumbPage({
     </span>
   )
 }
+
+// Breadcrumb list component  
+export function BreadcrumbList({ 
+  children, 
+  className 
+}: { 
+  children: React.ReactNode
+  className?: string 
+}) {
+  return (
+    <ol className={cn('flex items-center space-x-1', className)}>
+      {children}
+    </ol>
+  )
+}

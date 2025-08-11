@@ -31,7 +31,14 @@ export default function NewClientPage() {
         .eq("user_id", user.id)
         .single()
 
-      if (!company) throw new Error("კომპანია არ მოიძებნა")
+      if (!company) {
+        toast({
+          title: "შეცდომა",
+          description: "კომპანია არ მოიძებნა",
+          variant: "destructive",
+        })
+        return
+      }
 
       await clientService.createClient(company.id, data)
 
@@ -42,10 +49,20 @@ export default function NewClientPage() {
 
       router.push("/dashboard/clients")
     } catch (error) {
-      if (error instanceof Error && error.message?.includes("duplicate key")) {
-        throw new Error("კლიენტი ამ საიდენტიფიკაციო კოდით უკვე არსებობს")
+      console.error('Client creation error:', error)
+      
+      let errorMessage = "კლიენტის დამატება ვერ მოხერხდა"
+      
+      if (error instanceof Error) {
+        // Use the specific error message from the service
+        errorMessage = error.message
       }
-      throw error
+      
+      toast({
+        title: "შეცდომა",
+        description: errorMessage,
+        variant: "destructive",
+      })
     } finally {
       setIsLoading(false)
     }

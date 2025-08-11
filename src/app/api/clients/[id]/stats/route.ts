@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Check authentication
@@ -35,7 +36,7 @@ export async function GET(
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('id, name, created_at')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('company_id', company.id)
       .single()
 
@@ -50,7 +51,7 @@ export async function GET(
     const { data: invoices, error: invoicesError } = await supabase
       .from('invoices')
       .select('*')
-      .eq('client_id', params.id)
+      .eq('client_id', id)
       .eq('company_id', company.id)
       .order('issue_date', { ascending: true })
 
@@ -184,7 +185,7 @@ export async function GET(
     }
 
     return NextResponse.json({
-      client_id: params.id,
+      client_id: id,
       client_name: client.name,
       statistics
     })
@@ -198,8 +199,8 @@ export async function GET(
   }
 }
 
-function generateMonthlyBreakdown(invoices: any[]) {
-  const breakdown: Record<string, any> = {}
+function generateMonthlyBreakdown(invoices: Array<{ total_amount: number; due_date: string; status: string }>) {
+  const breakdown: Record<string, { total: number; count: number; paid: number; overdue: number }> = {}
   const now = new Date()
   
   // Generate last 12 months
@@ -246,7 +247,7 @@ function generateMonthlyBreakdown(invoices: any[]) {
   })
 
   // Convert to array and sort by month
-  return Object.values(breakdown).sort((a: any, b: any) => 
+  return Object.values(breakdown).sort((a, b) => 
     a.month.localeCompare(b.month)
   )
 }

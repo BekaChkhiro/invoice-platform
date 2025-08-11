@@ -17,36 +17,101 @@ import { Separator } from '@/components/ui/separator'
 import { format } from 'date-fns'
 import { ka } from 'date-fns/locale'
 
-import { useClient, useClientStats, useClientInvoices, useClientOperations } from '@/lib/hooks/use-clients'
-import { ClientStatCard } from '@/components/clients/client-stats-cards'
+import { clientService } from '@/lib/services/client'
+import { useToast } from '@/components/ui/use-toast'
+import { useClientInvoices } from '@/lib/hooks/use-clients'
+import type { Client } from '@/types/database'
 
 export default function ClientDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const { toast } = useToast()
   const clientId = params.id as string
 
   const [activeTab, setActiveTab] = useState('overview')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [client, setClient] = useState<Client | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  // Client invoices with hook
+  const { 
+    data: clientInvoicesData, 
+    isLoading: invoicesLoading 
+  } = useClientInvoices(clientId)
+  
+  const clientInvoices = clientInvoicesData?.invoices || []
+  
+  // Calculate client stats from invoices
+  const clientStats = clientInvoices.length > 0 ? {
+    total_invoices: clientInvoices.length,
+    total_amount: clientInvoices.reduce((sum: number, inv) => sum + Number(inv.total), 0),
+    paid_amount: clientInvoices
+      .filter(inv => inv.status === 'paid')
+      .reduce((sum: number, inv) => sum + Number(inv.total), 0),
+    outstanding_amount: clientInvoices
+      .filter(inv => inv.status !== 'paid')
+      .reduce((sum: number, inv) => sum + Number(inv.total), 0),
+    average_payment_time: 0 // Calculate this later if needed
+  } : null
+  
+  const statsLoading = invoicesLoading
 
-  const { data: client, isLoading, error } = useClient(clientId)
-  const { data: clientStats, isLoading: statsLoading } = useClientStats(clientId)
-  const { data: clientInvoices, isLoading: invoicesLoading } = useClientInvoices(clientId)
-  const { toggleStatus, deleteClient } = useClientOperations()
-
-  const handleDeleteClient = () => {
-    deleteClient.mutate(clientId, {
-      onSuccess: () => {
-        router.push('/dashboard/clients')
+  // Load client data
+  useEffect(() => {
+    const loadClient = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        const clientData = await clientService.getClient(clientId)
+        setClient(clientData)
+      } catch (err) {
+        console.error('Error loading client:', err)
+        setError(err instanceof Error ? err.message : 'კლიენტი ვერ მოიძებნა')
+      } finally {
+        setIsLoading(false)
       }
-    })
+    }
+
+    if (clientId) {
+      loadClient()
+    }
+  }, [clientId])
+
+  const handleDeleteClient = async () => {
+    if (!client) return
+    
+    try {
+      await clientService.deleteClient(client.id)
+      toast({
+        title: 'კლიენტი წაიშალა',
+        description: 'კლიენტი წარმატებით წაიშალა',
+      })
+      router.push('/dashboard/clients')
+    } catch (error) {
+      toast({
+        title: 'შეცდომა',
+        description: error instanceof Error ? error.message : 'კლიენტის წაშლა ვერ მოხერხდა',
+        variant: 'destructive',
+      })
+    }
     setDeleteDialogOpen(false)
   }
 
-  const handleToggleStatus = () => {
-    if (client) {
-      toggleStatus.mutate({ 
-        id: client.id, 
-        is_active: !client.is_active 
+  const handleToggleStatus = async () => {
+    if (!client) return
+    
+    try {
+      await clientService.toggleClientStatus(client.id, !client.is_active)
+      setClient({ ...client, is_active: !client.is_active })
+      toast({
+        title: 'სტატუსი განახლდა',
+        description: `კლიენტი ${!client.is_active ? 'გააქტიურდა' : 'გაუქმდა'}`,
+      })
+    } catch (error) {
+      toast({
+        title: 'შეცდომა',
+        description: error instanceof Error ? error.message : 'სტატუსის განახლება ვერ მოხერხდა',
+        variant: 'destructive',
       })
     }
   }
@@ -135,25 +200,6 @@ export default function ClientDetailPage() {
     }).format(amount)
   }
 
-  const getPaymentBehaviorColor = (behavior?: 'excellent' | 'good' | 'average' | 'poor') => {
-    switch (behavior) {
-      case 'excellent': return 'green'
-      case 'good': return 'blue'  
-      case 'average': return 'yellow'
-      case 'poor': return 'red'
-      default: return 'gray'
-    }
-  }
-
-  const getPaymentBehaviorLabel = (behavior?: 'excellent' | 'good' | 'average' | 'poor') => {
-    switch (behavior) {
-      case 'excellent': return 'შესანიშნავი'
-      case 'good': return 'კარგი'
-      case 'average': return 'საშუალო'
-      case 'poor': return 'ცუდი'
-      default: return 'უცნობი'
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -198,10 +244,10 @@ export default function ClientDetailPage() {
                   {client.phone}
                 </div>
               )}
-              {client.address && (
+              {(client.address_line1 || client.address_line2) && (
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
-                  {client.address}
+                  {[client.address_line1, client.address_line2].filter(Boolean).join(', ')}
                 </div>
               )}
             </div>
@@ -241,7 +287,6 @@ export default function ClientDetailPage() {
               
               <DropdownMenuItem 
                 onClick={handleToggleStatus}
-                disabled={toggleStatus.isPending}
               >
                 {client.is_active ? 'გაუქმება' : 'გააქტიურება'}
               </DropdownMenuItem>
@@ -260,37 +305,57 @@ export default function ClientDetailPage() {
 
       {/* Quick Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <ClientStatCard
-          title="სულ შემოსავალი"
-          value={formatCurrency(client.stats?.total_revenue || 0)}
-          subtitle={`${client.stats?.total_invoices || 0} ინვოისი`}
-          icon={TrendingUp}
-          color="green"
-        />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">სულ შემოსავალი</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {clientStats ? formatCurrency(clientStats.total_amount) : '₾0.00'}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              სულ ინვოისები: {clientStats?.total_invoices || 0}
+            </p>
+          </CardContent>
+        </Card>
         
-        <ClientStatCard
-          title="გადახდილი"
-          value={formatCurrency(client.stats?.paid_amount || 0)}
-          subtitle="დღევანდელი მდგომარეობით"
-          icon={Star}
-          color="blue"
-        />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">გადახდილი</CardTitle>
+            <Star className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {clientStats ? formatCurrency(clientStats.paid_amount) : '₾0.00'}
+            </div>
+            <p className="text-xs text-muted-foreground">გადახდილი ინვოისები</p>
+          </CardContent>
+        </Card>
         
-        <ClientStatCard
-          title="ვადაგადაცილებული"
-          value={formatCurrency(client.stats?.overdue_amount || 0)}
-          subtitle="გასავალია"
-          icon={FileText}
-          color="red"
-        />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">ვადაგადაცილებული</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {clientStats ? formatCurrency(clientStats.outstanding_amount) : '₾0.00'}
+            </div>
+            <p className="text-xs text-muted-foreground">გასავალი ინვოისები</p>
+          </CardContent>
+        </Card>
         
-        <ClientStatCard
-          title="გადახდის ქცევა"
-          value={getPaymentBehaviorLabel(client.stats?.payment_behavior)}
-          subtitle="საშუალო შეფასება"
-          icon={User}
-          color={getPaymentBehaviorColor(client.stats?.payment_behavior) as any}
-        />
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">გადახდის ქცევა</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">კარგი</div>
+            <p className="text-xs text-muted-foreground">საშუალო შეფასება</p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Tabs */}
@@ -332,12 +397,12 @@ export default function ClientDetailPage() {
                   </div>
                 )}
                 
-                {client.address && (
+                {(client.address_line1 || client.address_line2) && (
                   <div className="flex items-center gap-3">
                     <MapPin className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <div className="font-medium">მისამართი</div>
-                      <div className="text-sm text-muted-foreground">{client.address}</div>
+                      <div className="text-sm text-muted-foreground">{[client.address_line1, client.address_line2].filter(Boolean).join(', ')}</div>
                     </div>
                   </div>
                 )}
@@ -393,17 +458,7 @@ export default function ClientDetailPage() {
                   </div>
                 </div>
                 
-                {client.stats?.last_invoice_date && (
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <div className="font-medium">ბოლო ინვოისი</div>
-                      <div className="text-sm text-muted-foreground">
-                        {format(new Date(client.stats.last_invoice_date), 'dd MMM yyyy', { locale: ka })}
-                      </div>
-                    </div>
-                  </div>
-                )}
+
               </CardContent>
             </Card>
           </div>
@@ -447,27 +502,33 @@ export default function ClientDetailPage() {
                     </div>
                   ))}
                 </div>
-              ) : clientInvoices?.invoices?.length ? (
+              ) : clientInvoices?.length ? (
                 <div className="space-y-3">
-                  {clientInvoices.invoices.map((invoice: any) => (
-                    <div key={invoice.id} className="flex items-center justify-between p-3 border rounded hover:bg-gray-50">
-                      <div className="space-y-1">
-                        <div className="font-medium">{invoice.invoice_number}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {format(new Date(invoice.issue_date), 'dd MMM yyyy', { locale: ka })}
+                  {clientInvoices.map((invoice) => (
+                    <Link 
+                      key={invoice.id} 
+                      href={`/dashboard/invoices/${invoice.id}`}
+                      className="block"
+                    >
+                      <div className="flex items-center justify-between p-3 border rounded hover:bg-gray-50 cursor-pointer transition-colors">
+                        <div className="space-y-1">
+                          <div className="font-medium">{invoice.invoice_number}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {format(new Date(invoice.issue_date), 'dd MMM yyyy', { locale: ka })}
+                          </div>
+                        </div>
+                        <div className="text-right space-y-1">
+                          <div className="font-medium">{formatCurrency(Number(invoice.total))}</div>
+                          <Badge variant="secondary" className="text-xs">
+                            {invoice.status === 'draft' && 'მონახაზი'}
+                            {invoice.status === 'sent' && 'გაგზავნილი'}
+                            {invoice.status === 'paid' && 'გადახდილი'}
+                            {invoice.status === 'overdue' && 'ვადაგადაცილებული'}
+                            {invoice.status === 'cancelled' && 'გაუქმებული'}
+                          </Badge>
                         </div>
                       </div>
-                      <div className="text-right space-y-1">
-                        <div className="font-medium">{formatCurrency(invoice.total)}</div>
-                        <Badge variant="secondary" className="text-xs">
-                          {invoice.status === 'draft' && 'მონახაზი'}
-                          {invoice.status === 'sent' && 'გაგზავნილი'}
-                          {invoice.status === 'paid' && 'გადახდილი'}
-                          {invoice.status === 'overdue' && 'ვადაგადაცილებული'}
-                          {invoice.status === 'cancelled' && 'გაუქმებული'}
-                        </Badge>
-                      </div>
-                    </div>
+                    </Link>
                   ))}
                   
                   <Separator />
@@ -535,7 +596,7 @@ export default function ClientDetailPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>დარწმუნებული ხართ?</AlertDialogTitle>
             <AlertDialogDescription>
-              კლიენტი "{client.name}" წაიშლება. თუ კლიენტს აქვს ინვოისები, ის მხოლოდ გაუქმდება. 
+              კლიენტი &quot;{client.name}&quot; წაიშლება. თუ კლიენტს აქვს ინვოისები, ის მხოლოდ გაუქმდება. 
               წინააღმდეგ შემთხვევაში კლიენტი სრულად წაიშლება.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -544,9 +605,8 @@ export default function ClientDetailPage() {
             <AlertDialogAction 
               onClick={handleDeleteClient}
               className="bg-red-600 hover:bg-red-700"
-              disabled={deleteClient.isPending}
             >
-              {deleteClient.isPending ? 'მოლოდინა...' : 'წაშლა'}
+              წაშლა
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

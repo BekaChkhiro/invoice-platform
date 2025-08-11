@@ -8,9 +8,10 @@ const updateStatusSchema = z.object({
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Check authentication
@@ -53,7 +54,7 @@ export async function PATCH(
     const { data: invoice, error: checkError } = await supabase
       .from('invoices')
       .select('id, status, client_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('company_id', company.id)
       .single()
 
@@ -81,7 +82,7 @@ export async function PATCH(
     }
 
     // Prepare update data
-    const updateData: any = {
+    const updateData: { status: string; updated_at: string; paid_at?: string; sent_at?: string } = {
       status: newStatus,
       updated_at: new Date().toISOString()
     }
@@ -99,7 +100,7 @@ export async function PATCH(
     const { data: updatedInvoice, error: updateError } = await supabase
       .from('invoices')
       .update(updateData)
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -132,7 +133,7 @@ export async function PATCH(
       message: statusMessages[newStatus],
       notification: {
         type: 'invoice_status_changed',
-        invoice_id: params.id,
+        invoice_id: id,
         old_status: invoice.status,
         new_status: newStatus,
         client_name: client?.name,

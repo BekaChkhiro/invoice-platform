@@ -5,9 +5,10 @@ import { z } from 'zod'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Check authentication
@@ -37,7 +38,7 @@ export async function GET(
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('company_id', company.id)
       .single()
 
@@ -52,7 +53,7 @@ export async function GET(
     const { data: recentInvoices } = await supabase
       .from('invoices')
       .select('id, invoice_number, issue_date, due_date, total, status, currency')
-      .eq('client_id', params.id)
+      .eq('client_id', id)
       .eq('company_id', company.id)
       .order('issue_date', { ascending: false })
       .limit(5)
@@ -61,7 +62,7 @@ export async function GET(
     const { data: allInvoices } = await supabase
       .from('invoices')
       .select('total, status, due_date, paid_at')
-      .eq('client_id', params.id)
+      .eq('client_id', id)
       .eq('company_id', company.id)
 
     // Calculate statistics
@@ -98,9 +99,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Check authentication
@@ -130,7 +132,7 @@ export async function PUT(
     const { data: existingClient, error: checkError } = await supabase
       .from('clients')
       .select('id, type')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('company_id', company.id)
       .single()
 
@@ -165,7 +167,7 @@ export async function PUT(
       const { data: invoices } = await supabase
         .from('invoices')
         .select('id')
-        .eq('client_id', params.id)
+        .eq('client_id', id)
         .limit(1)
 
       if (invoices && invoices.length > 0) {
@@ -183,7 +185,7 @@ export async function PUT(
         .select('id')
         .eq('company_id', company.id)
         .eq('email', updateData.email)
-        .neq('id', params.id)
+        .neq('id', id)
         .single()
 
       if (existingEmail) {
@@ -201,7 +203,7 @@ export async function PUT(
         .select('id')
         .eq('company_id', company.id)
         .eq('tax_id', updateData.tax_id)
-        .neq('id', params.id)
+        .neq('id', id)
         .single()
 
       if (existingTaxId) {
@@ -228,7 +230,7 @@ export async function PUT(
         ...updateData,
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -253,9 +255,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Check authentication
@@ -285,7 +288,7 @@ export async function DELETE(
     const { data: client, error: checkError } = await supabase
       .from('clients')
       .select('id')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('company_id', company.id)
       .single()
 
@@ -300,7 +303,7 @@ export async function DELETE(
     const { data: invoices, error: invoicesError } = await supabase
       .from('invoices')
       .select('id')
-      .eq('client_id', params.id)
+      .eq('client_id', id)
       .limit(1)
 
     if (invoicesError) {
@@ -315,7 +318,7 @@ export async function DELETE(
           is_active: false,
           updated_at: new Date().toISOString()
         })
-        .eq('id', params.id)
+        .eq('id', id)
 
       if (softDeleteError) {
         console.error('Error soft deleting client:', softDeleteError)
@@ -334,7 +337,7 @@ export async function DELETE(
       const { error: deleteError } = await supabase
         .from('clients')
         .delete()
-        .eq('id', params.id)
+        .eq('id', id)
 
       if (deleteError) {
         console.error('Error deleting client:', deleteError)
@@ -360,7 +363,7 @@ export async function DELETE(
 }
 
 // Helper function to calculate payment behavior
-function calculatePaymentBehavior(invoices: any[]) {
+function calculatePaymentBehavior(invoices: Array<{ status: string; paid_at?: string; due_date?: string; created_at?: string }>) {
   const paidInvoices = invoices.filter(inv => inv.status === 'paid' && inv.paid_at)
   
   if (paidInvoices.length === 0) {

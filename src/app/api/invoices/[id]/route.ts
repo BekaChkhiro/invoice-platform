@@ -4,9 +4,10 @@ import { updateInvoiceSchema } from '@/lib/validations/invoice'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Check authentication
@@ -80,7 +81,7 @@ export async function GET(
           sort_order
         )
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('company_id', company.id)
       .order('sort_order', { foreignTable: 'invoice_items', ascending: true })
       .single()
@@ -112,9 +113,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Check authentication
@@ -144,7 +146,7 @@ export async function PUT(
     const { data: existingInvoice, error: checkError } = await supabase
       .from('invoices')
       .select('id, status')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('company_id', company.id)
       .single()
 
@@ -165,7 +167,7 @@ export async function PUT(
 
     // Parse and validate request body
     const body = await request.json()
-    const validationResult = updateInvoiceSchema.safeParse({ ...body, id: params.id })
+    const validationResult = updateInvoiceSchema.safeParse({ ...body, id: id })
 
     if (!validationResult.success) {
       return NextResponse.json(
@@ -204,7 +206,7 @@ export async function PUT(
         ...invoiceUpdateData,
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -229,8 +231,8 @@ export async function PUT(
       }
 
       // Insert new items
-      const invoiceItems = items.map((item: any, index: number) => ({
-        invoice_id: params.id,
+      const invoiceItems = items.map((item: { description: string; quantity: number; rate: number }, index: number) => ({
+        invoice_id: id,
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
@@ -265,7 +267,7 @@ export async function PUT(
         ),
         items:invoice_items(*)
       `)
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     if (fetchError || !completeInvoice) {
@@ -285,9 +287,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const supabase = await createClient()
     
     // Check authentication
@@ -317,7 +320,7 @@ export async function DELETE(
     const { data: invoice, error: checkError } = await supabase
       .from('invoices')
       .select('id, status')
-      .eq('id', params.id)
+      .eq('id', id)
       .eq('company_id', company.id)
       .single()
 
@@ -343,7 +346,7 @@ export async function DELETE(
         status: 'cancelled',
         updated_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
 
     if (deleteError) {
       console.error('Error deleting invoice:', deleteError)

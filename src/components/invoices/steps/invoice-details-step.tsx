@@ -41,7 +41,7 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
   }
 
   const ItemRow = ({ index }: { index: number }) => {
-    const item = watch(`items.${index}`)
+    const item = watch(`items.${index}`) || { description: '', quantity: 1, unit_price: 0, line_total: 0, sort_order: 0 }
     
     const handleQuantityChange = (value: string) => {
       const quantity = parseFloat(value) || 0
@@ -68,7 +68,7 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
             <Textarea
               id={`item-${index}-description`}
               placeholder="პროდუქტის ან სერვისის აღწერა..."
-              value={item.description || ''}
+              value={item.description}
               onChange={(e) => handleDescriptionChange(e.target.value)}
               className="min-h-[60px] resize-none"
             />
@@ -87,7 +87,7 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
               type="number"
               step="0.001"
               min="0"
-              value={item.quantity?.toString() || ''}
+              value={item.quantity.toString()}
               onChange={(e) => handleQuantityChange(e.target.value)}
             />
             {errors.items?.[index]?.quantity && (
@@ -105,7 +105,7 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
               type="number"
               step="0.01"
               min="0"
-              value={item.unit_price?.toString() || ''}
+              value={item.unit_price.toString()}
               onChange={(e) => handleUnitPriceChange(e.target.value)}
             />
             {errors.items?.[index]?.unit_price && (
@@ -204,7 +204,7 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>გადახდის ვადა (დღეები)</FormLabel>
-              <Select value={field.value?.toString() || ''} onValueChange={(value) => field.onChange(parseInt(value))}>
+              <Select value={field.value?.toString() || '14'} onValueChange={(value) => field.onChange(parseInt(value))}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />
@@ -230,7 +230,7 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>ვალუტა</FormLabel>
-              <Select value={field.value || ''} onValueChange={field.onChange}>
+              <Select value={field.value || 'GEL'} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />
@@ -254,7 +254,7 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>დღგ განაკვეთი (%)</FormLabel>
-              <Select value={field.value?.toString() || ''} onValueChange={(value) => field.onChange(parseFloat(value))}>
+              <Select value={field.value?.toString() || '18'} onValueChange={(value) => field.onChange(parseFloat(value))}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />

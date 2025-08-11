@@ -2,6 +2,7 @@ import { type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+  // Only handle authentication, no plan restrictions
   return await updateSession(request)
 }
 

@@ -20,13 +20,13 @@ export function useKeyboardShortcuts({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       const isCtrlOrCmd = event.ctrlKey || event.metaKey
-      const key = event.key.toLowerCase()
+      const key = event.key ? event.key.toLowerCase() : ''
 
       // Don't trigger shortcuts in input fields
       const activeElement = document.activeElement
       const isInputFocused = activeElement?.tagName === 'INPUT' || 
                             activeElement?.tagName === 'TEXTAREA' ||
-                            activeElement?.contentEditable === 'true'
+                            (activeElement as HTMLElement)?.contentEditable === 'true'
 
       // Global navigation shortcuts (work everywhere)
       if (isCtrlOrCmd) {
@@ -117,7 +117,7 @@ export function useKeyboardShortcuts({
         const activeElement = document.activeElement
         const isInputFocused = activeElement?.tagName === 'INPUT' || 
                               activeElement?.tagName === 'TEXTAREA' ||
-                              activeElement?.contentEditable === 'true'
+                              (activeElement as HTMLElement)?.contentEditable === 'true'
         
         if (!isInputFocused) {
           event.preventDefault()
