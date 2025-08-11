@@ -409,7 +409,7 @@ export default function CompanySettingsPage() {
                       <p className="text-sm text-error">{errors.invoice_prefix.message}</p>
                     )}
                     <p className="text-xs text-gray-500">
-                      მაგ: INV-2024-0001
+                      მაგ: INV-2025-0001
                     </p>
                   </div>
 

@@ -144,7 +144,7 @@ function DashboardContent() {
               <span className="text-xs bg-gray-100 px-2 py-1 rounded">
                 დაჭირეთ ? მალსახმობისთვის
               </span>
-              <span>© 2024 Invoice Platform</span>
+              <span>© 2025 Invoice Platform</span>
             </div>
           </div>
         </CardContent>

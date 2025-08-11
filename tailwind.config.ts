@@ -276,6 +276,20 @@ const config = {
   					transform: 'none',
   					animationTimingFunction: 'cubic-bezier(0, 0, 0.2, 1)'
   				}
+  			},
+  			'blob': {
+  				'0%': {
+  					transform: 'translate(0px, 0px) scale(1)'
+  				},
+  				'33%': {
+  					transform: 'translate(30px, -50px) scale(1.1)'
+  				},
+  				'66%': {
+  					transform: 'translate(-20px, 20px) scale(0.9)'
+  				},
+  				'100%': {
+  					transform: 'translate(0px, 0px) scale(1)'
+  				}
   			}
   		},
   		animation: {
@@ -285,7 +299,12 @@ const config = {
   			'slide-in': 'slide-in 0.3s ease-out',
   			'spin': 'spin 1s linear infinite',
   			'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-  			'bounce': 'bounce 1s infinite'
+  			'bounce': 'bounce 1s infinite',
+  			'blob': 'blob 7s infinite'
+  		},
+  		animationDelay: {
+  			'2000': '2s',
+  			'4000': '4s'
   		}
   	}
   },

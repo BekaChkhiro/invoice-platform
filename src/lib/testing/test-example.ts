@@ -157,7 +157,7 @@ async function exampleCustomTestSuite() {
         name: 'Georgian Date Formatting',
         fn: async () => {
           try {
-            const date = new Date('2024-01-15');
+            const date = new Date('2025-01-15');
             const georgianDate = date.toLocaleDateString('ka-GE');
 
             return {

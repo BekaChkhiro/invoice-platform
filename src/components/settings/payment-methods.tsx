@@ -147,7 +147,7 @@ export function PaymentMethods({ userId, className }: PaymentMethodsProps) {
             postalCode: '0108',
             country: 'GE'
           },
-          createdAt: '2024-01-15'
+          createdAt: '2025-01-15'
         },
         {
           id: '2',
@@ -156,7 +156,7 @@ export function PaymentMethods({ userId, className }: PaymentMethodsProps) {
           paypalDetails: {
             email: 'user@example.com'
           },
-          createdAt: '2024-02-10'
+          createdAt: '2025-02-10'
         }
       ])
       setIsLoading(false)

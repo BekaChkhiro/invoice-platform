@@ -26,7 +26,7 @@ export default function AuthLayout({
         
         {/* Footer */}
         <p className="text-center text-sm text-gray-600 mt-8">
-          © 2024 Invoice Platform. ყველა უფლება დაცულია.
+          © 2025 Invoice Platform. ყველა უფლება დაცულია.
         </p>
       </div>
     </div>

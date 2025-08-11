@@ -128,98 +128,123 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
     }
 
     return (
-      <Card className="p-4">
-        <div className="grid grid-cols-12 gap-4 items-start">
-          {/* Description */}
-          <div className="col-span-5">
-            <Label htmlFor={`item-${index}-description`}>აღწერა</Label>
-            <Textarea
-              id={`item-${index}-description`}
-              placeholder="პროდუქტის ან სერვისის აღწერა..."
-              value={localDescription}
-              onChange={(e) => handleDescriptionChange(e.target.value)}
-              onBlur={handleDescriptionBlur}
-              className="min-h-[60px] resize-none"
-              rows={2}
-            />
-            {errors.items?.[index]?.description && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.items[index].description?.message}
-              </p>
-            )}
+      <Card className="group relative overflow-hidden border border-border/50 hover:border-primary/30 transition-all duration-200 hover:shadow-sm">
+        <div className="flex items-center justify-between p-3 border-b border-border/30">
+          <div className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">
+            ნაწილი #{index + 1}
           </div>
-
-          {/* Quantity */}
-          <div className="col-span-2">
-            <Label htmlFor={`item-${index}-quantity`}>რაოდენობა</Label>
-            <Input
-              id={`item-${index}-quantity`}
-              type="number"
-              step="0.001"
-              min="0"
-              value={localQuantity}
-              onChange={(e) => handleQuantityChange(e.target.value)}
-              onBlur={handleQuantityBlur}
-              placeholder="0"
-            />
-            {errors.items?.[index]?.quantity && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.items[index].quantity?.message}
-              </p>
-            )}
-          </div>
-
-          {/* Unit Price */}
-          <div className="col-span-2">
-            <Label htmlFor={`item-${index}-price`}>ერთეულის ფასი</Label>
-            <Input
-              id={`item-${index}-price`}
-              type="number"
-              step="0.01"
-              min="0"
-              value={localUnitPrice}
-              onChange={(e) => handleUnitPriceChange(e.target.value)}
-              onBlur={handleUnitPriceBlur}
-              placeholder="0.00"
-            />
-            {errors.items?.[index]?.unit_price && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.items[index].unit_price?.message}
-              </p>
-            )}
-          </div>
-
-          {/* Line Total */}
-          <div className="col-span-2">
-            <Label>ჯამი</Label>
-            <div className="h-10 flex items-center font-medium">
-              {(item.quantity * item.unit_price).toFixed(2)} ₾
-            </div>
-          </div>
-
+          
           {/* Actions */}
-          <div className="col-span-1 flex flex-col gap-1">
-            <Label className="opacity-0">.</Label>
-            <div className="flex gap-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => duplicateItem(index)}
-                className="p-1 h-8 w-8"
-              >
-                <Copy className="w-3 h-3" />
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => removeItem(index)}
-                disabled={formData.items.length === 1}
-                className="p-1 h-8 w-8 hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-              >
-                <Trash2 className="w-3 h-3" />
-              </Button>
+          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => duplicateItem(index)}
+              className="h-6 w-6 p-0 hover:bg-primary/10"
+              title="დუბლირება"
+            >
+              <Copy className="w-3 h-3" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => removeItem(index)}
+              disabled={formData.items.length === 1}
+              className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive disabled:opacity-30"
+              title="წაშლა"
+            >
+              <Trash2 className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+        
+        <div className="p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
+            {/* Description */}
+            <div className="lg:col-span-5">
+              <div className="space-y-1">
+                <Label htmlFor={`item-${index}-description`} className="text-xs font-medium text-muted-foreground">
+                  აღწერა *
+                </Label>
+                <Textarea
+                  id={`item-${index}-description`}
+                  placeholder="პროდუქტის/სერვისის აღწერა..."
+                  value={localDescription}
+                  onChange={(e) => handleDescriptionChange(e.target.value)}
+                  onBlur={handleDescriptionBlur}
+                  className="min-h-[60px] resize-none text-sm border-border/60 focus:border-primary transition-colors"
+                  rows={2}
+                />
+                {errors.items?.[index]?.description && (
+                  <p className="text-xs text-destructive">
+                    {errors.items[index].description?.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Numbers */}
+            <div className="lg:col-span-7 grid grid-cols-3 gap-3">
+              {/* Quantity */}
+              <div className="space-y-1">
+                <Label htmlFor={`item-${index}-quantity`} className="text-xs font-medium text-muted-foreground">
+                  რაოდენობა
+                </Label>
+                <Input
+                  id={`item-${index}-quantity`}
+                  type="number"
+                  step="0.001"
+                  min="0"
+                  value={localQuantity}
+                  onChange={(e) => handleQuantityChange(e.target.value)}
+                  onBlur={handleQuantityBlur}
+                  placeholder="1"
+                  className="text-center text-sm h-9 border-border/60 focus:border-primary transition-colors"
+                />
+                {errors.items?.[index]?.quantity && (
+                  <p className="text-xs text-destructive">
+                    {errors.items[index].quantity?.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Unit Price */}
+              <div className="space-y-1">
+                <Label htmlFor={`item-${index}-price`} className="text-xs font-medium text-muted-foreground">
+                  ერთ. ფასი
+                </Label>
+                <div className="relative">
+                  <Input
+                    id={`item-${index}-price`}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={localUnitPrice}
+                    onChange={(e) => handleUnitPriceChange(e.target.value)}
+                    onBlur={handleUnitPriceBlur}
+                    placeholder="0.00"
+                    className="text-center text-sm h-9 border-border/60 focus:border-primary transition-colors pr-6"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₾</span>
+                </div>
+                {errors.items?.[index]?.unit_price && (
+                  <p className="text-xs text-destructive">
+                    {errors.items[index].unit_price?.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Line Total */}
+              <div className="space-y-1">
+                <Label className="text-xs font-medium text-muted-foreground">ჯამი</Label>
+                <div className="h-9 flex items-center justify-center bg-muted/30 border border-border/40 rounded-md">
+                  <span className="text-sm font-semibold text-foreground">
+                    {(item.quantity * item.unit_price).toFixed(2)} ₾
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

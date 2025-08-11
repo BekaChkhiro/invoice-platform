@@ -603,8 +603,8 @@ export class EdgeCaseTestingUtils {
       const invalidDateScenarios = [
         {
           name: 'Due Date Before Issue Date',
-          issueDate: new Date('2024-01-15').toISOString(),
-          dueDate: new Date('2024-01-10').toISOString(),
+          issueDate: new Date('2025-01-15').toISOString(),
+          dueDate: new Date('2025-01-10').toISOString(),
           shouldReject: true
         },
         {
