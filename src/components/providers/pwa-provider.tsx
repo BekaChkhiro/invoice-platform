@@ -21,6 +21,46 @@ export function PWAProvider({ children }: PWAProviderProps) {
   const [isOnline, setIsOnline] = useState(true)
   const [updateAvailable, setUpdateAvailable] = useState(false)
 
+  const registerServiceWorker = useCallback(async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/',
+        updateViaCache: 'none'
+      })
+
+      console.log('Service Worker registered:', registration)
+
+      // Check for updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing
+        
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              setUpdateAvailable(true)
+              toast.info('ახალი ვერსია ხელმისაწვდომია', {
+                action: {
+                  label: 'განახლება',
+                  onClick: () => updateApp()
+                }
+              })
+            }
+          })
+        }
+      })
+
+      // Handle service worker messages
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'CACHE_UPDATED') {
+          toast.success('კეში განახლდა')
+        }
+      })
+
+    } catch (error) {
+      console.error('Service Worker registration failed:', error)
+    }
+  }, [])
+
   useEffect(() => {
     // Register service worker
     if ('serviceWorker' in navigator) {
@@ -71,46 +111,6 @@ export function PWAProvider({ children }: PWAProviderProps) {
       window.removeEventListener('offline', handleOffline)
     }
   }, [registerServiceWorker])
-
-  const registerServiceWorker = useCallback(async () => {
-    try {
-      const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/',
-        updateViaCache: 'none'
-      })
-
-      console.log('Service Worker registered:', registration)
-
-      // Check for updates
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing
-        
-        if (newWorker) {
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              setUpdateAvailable(true)
-              toast.info('ახალი ვერსია ხელმისაწვდომია', {
-                action: {
-                  label: 'განახლება',
-                  onClick: () => updateApp()
-                }
-              })
-            }
-          })
-        }
-      })
-
-      // Handle service worker messages
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        if (event.data && event.data.type === 'CACHE_UPDATED') {
-          toast.success('კეში განახლდა')
-        }
-      })
-
-    } catch (error) {
-      console.error('Service Worker registration failed:', error)
-    }
-  }, [])
 
   const handleInstallApp = async () => {
     if (!deferredPrompt) return

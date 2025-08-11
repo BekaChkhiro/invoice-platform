@@ -1,7 +1,6 @@
 import './globals.css'
 import { inter } from '@/styles/fonts'
 import { Toaster } from "@/components/ui/sonner"
-import { PWAProvider } from '@/components/providers/pwa-provider'
 
 export const metadata = {
   title: 'Invoice Platform - ინვოისის პლატფორმა',
@@ -65,9 +64,7 @@ export default function RootLayout({
         <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#0ea5e9" />
       </head>
       <body className="min-h-screen font-sans antialiased">
-        <PWAProvider>
-          {children}
-        </PWAProvider>
+        {children}
         <Toaster />
       </body>
     </html>
