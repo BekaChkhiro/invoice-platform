@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, ArrowRight, Save, Send } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
 import { Form } from '@/components/ui/form'
 
 // Import step components
@@ -33,7 +32,7 @@ export default function NewInvoicePage() {
     totals,
     saveToStorage,
     loadFromStorage,
-    clearStorage
+    clearStorage // eslint-disable-line @typescript-eslint/no-unused-vars
   } = useInvoiceForm()
 
   // Define step configurations

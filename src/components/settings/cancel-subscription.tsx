@@ -157,7 +157,7 @@ export function CancelSubscription({
 
   const handleReasonSubmit = (reason: string) => {
     setSelectedReason(reason)
-    form.setValue('reason', reason as any)
+    form.setValue('reason', reason)
     
     const offer = getRetentionOffer(reason)
     if (offer && reason !== 'other') {

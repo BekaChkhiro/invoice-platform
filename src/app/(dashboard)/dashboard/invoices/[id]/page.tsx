@@ -108,7 +108,7 @@ export default function InvoiceDetailPage() {
           }
         }
         
-        setInvoice(invoiceData as InvoiceWithItems)
+        setInvoice(invoiceData as unknown as InvoiceWithItems)
       } catch (err) {
         console.error('Error loading invoice:', err)
         setError(err instanceof Error ? err.message : 'ინვოისი ვერ მოიძებნა')
@@ -157,7 +157,7 @@ export default function InvoiceDetailPage() {
         title: 'ინვოისი დუბლირდა',
         description: 'ინვოისი წარმატებით დუბლირდა',
       })
-      router.push(`/dashboard/invoices/${duplicatedInvoice.id}`)
+      router.push(`/dashboard/invoices/${(duplicatedInvoice as any).id}`)
     } catch (error) {
       toast({
         title: 'შეცდომა',
@@ -175,7 +175,7 @@ export default function InvoiceDetailPage() {
     
     try {
       setActionLoading(true)
-      await updateInvoiceStatus(invoice.id, 'paid')
+      await updateInvoiceStatus({ id: invoice.id, status: 'paid', paid_at: new Date() })
       setInvoice({ ...invoice, status: 'paid', paid_at: new Date().toISOString() })
       toast({
         title: 'სტატუსი განახლდა',

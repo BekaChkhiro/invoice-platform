@@ -1,17 +1,22 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { X, Download, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
 
 interface PWAProviderProps {
   children: React.ReactNode
 }
 
 export function PWAProvider({ children }: PWAProviderProps) {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showInstallPrompt, setShowInstallPrompt] = useState(false)
   const [isOnline, setIsOnline] = useState(true)
   const [updateAvailable, setUpdateAvailable] = useState(false)
@@ -65,9 +70,9 @@ export function PWAProvider({ children }: PWAProviderProps) {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [])
+  }, [registerServiceWorker])
 
-  const registerServiceWorker = async () => {
+  const registerServiceWorker = useCallback(async () => {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', {
         scope: '/',
@@ -105,7 +110,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
     } catch (error) {
       console.error('Service Worker registration failed:', error)
     }
-  }
+  }, [])
 
   const handleInstallApp = async () => {
     if (!deferredPrompt) return
@@ -245,7 +250,7 @@ export function usePWA() {
     // Check if app is installed
     const checkInstalled = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-      const isIOSStandalone = (window.navigator as any).standalone === true
+      const isIOSStandalone = (window.navigator as Navigator & { standalone?: boolean }).standalone === true
       setIsInstalled(isStandalone || isIOSStandalone)
     }
 

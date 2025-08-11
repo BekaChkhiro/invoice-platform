@@ -20,7 +20,7 @@ import { ka } from 'date-fns/locale'
 import { clientService } from '@/lib/services/client'
 import { useToast } from '@/components/ui/use-toast'
 import { useClientInvoices } from '@/lib/hooks/use-clients'
-import type { Client } from '@/types/database'
+import type { Client, Invoice } from '@/types/database'
 
 export default function ClientDetailPage() {
   const params = useParams()
@@ -44,13 +44,13 @@ export default function ClientDetailPage() {
   // Calculate client stats from invoices
   const clientStats = clientInvoices.length > 0 ? {
     total_invoices: clientInvoices.length,
-    total_amount: clientInvoices.reduce((sum: number, inv) => sum + Number(inv.total), 0),
+    total_amount: clientInvoices.reduce((sum: number, inv: Invoice) => sum + Number(inv.total), 0),
     paid_amount: clientInvoices
-      .filter(inv => inv.status === 'paid')
-      .reduce((sum: number, inv) => sum + Number(inv.total), 0),
+      .filter((inv: Invoice) => inv.status === 'paid')
+      .reduce((sum: number, inv: Invoice) => sum + Number(inv.total), 0),
     outstanding_amount: clientInvoices
-      .filter(inv => inv.status !== 'paid')
-      .reduce((sum: number, inv) => sum + Number(inv.total), 0),
+      .filter((inv: Invoice) => inv.status !== 'paid')
+      .reduce((sum: number, inv: Invoice) => sum + Number(inv.total), 0),
     average_payment_time: 0 // Calculate this later if needed
   } : null
   
@@ -504,7 +504,7 @@ export default function ClientDetailPage() {
                 </div>
               ) : clientInvoices?.length ? (
                 <div className="space-y-3">
-                  {clientInvoices.map((invoice) => (
+                  {clientInvoices.map((invoice: Invoice) => (
                     <Link 
                       key={invoice.id} 
                       href={`/dashboard/invoices/${invoice.id}`}
@@ -524,7 +524,6 @@ export default function ClientDetailPage() {
                             {invoice.status === 'sent' && 'გაგზავნილი'}
                             {invoice.status === 'paid' && 'გადახდილი'}
                             {invoice.status === 'overdue' && 'ვადაგადაცილებული'}
-                            {invoice.status === 'cancelled' && 'გაუქმებული'}
                           </Badge>
                         </div>
                       </div>

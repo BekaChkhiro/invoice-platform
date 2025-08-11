@@ -263,8 +263,8 @@ export async function runFullTestSuite(config?: Partial<TestConfig>): Promise<vo
     
     // Save detailed report to file if in Node.js environment
     if (typeof window === 'undefined') {
-      const fs = require('fs');
-      const path = require('path');
+      const fs = await import('fs');
+      const path = await import('path');
       const reportsDir = path.join(process.cwd(), 'test-reports');
       
       if (!fs.existsSync(reportsDir)) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Plus, Download, MoreHorizontal, RefreshCcw } from 'lucide-react'
 import Link from 'next/link'
 
@@ -57,14 +57,14 @@ export default function InvoicesPage() {
 
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true)
     try {
       await refetch()
     } finally {
       setIsRefreshing(false)
     }
-  }
+  }, [refetch])
 
   const handleExport = async (format: 'csv' | 'excel' | 'pdf') => {
     await exportInvoices(format, false)

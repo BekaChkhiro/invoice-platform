@@ -26,7 +26,7 @@ import { UsageProgress } from "@/components/subscription/usage-progress"
 import type { UserSubscription, UsageStats } from "@/types/subscription"
 
 interface BillingOverviewProps {
-  subscription: UserSubscription & { plan: any }
+  subscription: UserSubscription & { plan: { name: string; price: number; interval: string; features?: string[] } }
   usage: UsageStats
   nextBilling?: {
     amount: number

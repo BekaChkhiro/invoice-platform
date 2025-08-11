@@ -35,6 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DatePickerWithRange } from '@/components/ui/date-range-picker'
 
 import { useInvoiceStats } from '@/lib/hooks/use-invoices'
+import type { InvoiceStats } from '@/lib/services/invoice'
 import { useAuth } from '@/lib/hooks/use-auth'
 
 // =====================================
@@ -67,7 +68,12 @@ export default function AnalyticsPage() {
     isLoading, 
     isError, 
     refetch 
-  } = useInvoiceStats(company?.id || '')
+  } = useInvoiceStats(company?.id || '') as {
+    data: InvoiceStats | undefined
+    isLoading: boolean
+    isError: boolean
+    refetch: () => void
+  }
 
   // Get date range based on period
   const dateRange = useMemo(() => {
@@ -101,12 +107,12 @@ export default function AnalyticsPage() {
     // Mock revenue trend data
     const revenueTrend = Array.from({ length: 30 }, (_, i) => ({
       date: format(subDays(dateRange.to, 29 - i), 'MMM dd', { locale: ka }),
-      revenue: Math.random() * stats.thisMonthRevenue * 0.1 + stats.thisMonthRevenue * 0.02,
+      revenue: Math.random() * (stats?.thisMonthRevenue || 0) * 0.1 + (stats?.thisMonthRevenue || 0) * 0.02,
       invoices: Math.floor(Math.random() * 5) + 1
     }))
 
     // Client analysis
-    const clientGrowth = stats.topClients.map(client => ({
+    const clientGrowth = (stats?.topClients || []).map(client => ({
       name: client.client_name,
       thisMonth: client.total_amount,
       lastMonth: client.total_amount * (0.8 + Math.random() * 0.4),
@@ -117,13 +123,13 @@ export default function AnalyticsPage() {
       revenueTrend,
       clientGrowth,
       summary: {
-        totalRevenue: stats.thisMonthRevenue + stats.lastMonthRevenue,
-        revenueGrowth: stats.lastMonthRevenue > 0 
-          ? ((stats.thisMonthRevenue - stats.lastMonthRevenue) / stats.lastMonthRevenue) * 100 
+        totalRevenue: (stats?.thisMonthRevenue || 0) + (stats?.lastMonthRevenue || 0),
+        revenueGrowth: (stats?.lastMonthRevenue || 0) > 0 
+          ? (((stats?.thisMonthRevenue || 0) - (stats?.lastMonthRevenue || 0)) / (stats?.lastMonthRevenue || 1)) * 100 
           : 100,
-        totalInvoices: stats.totalInvoices,
-        averageInvoiceValue: stats.averageInvoiceValue,
-        topPayingClient: stats.topClients[0]?.client_name || 'N/A',
+        totalInvoices: stats?.totalInvoices || 0,
+        averageInvoiceValue: stats?.averageInvoiceValue || 0,
+        topPayingClient: stats?.topClients?.[0]?.client_name || 'N/A',
         averagePaymentTime: Math.floor(Math.random() * 15) + 5 // Mock data
       }
     }
@@ -337,22 +343,22 @@ export default function AnalyticsPage() {
                       <PieChart>
                         <Pie
                           data={[
-                            { name: 'გადახდილი', value: stats.paidAmount, color: '#10b981' },
-                            { name: 'მოლოდინში', value: stats.pendingAmount, color: '#3b82f6' },
-                            { name: 'ვადაგადაცილებული', value: stats.overdueAmount, color: '#ef4444' }
+                            { name: 'გადახდილი', value: stats?.paidAmount || 0, color: '#10b981' },
+                            { name: 'მოლოდინში', value: stats?.pendingAmount || 0, color: '#3b82f6' },
+                            { name: 'ვადაგადაცილებული', value: stats?.overdueAmount || 0, color: '#ef4444' }
                           ]}
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                          label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                           outerRadius={80}
                           fill="#8884d8"
                           dataKey="value"
                         >
                           {[
-                            { name: 'გადახდილი', value: stats.paidAmount, color: '#10b981' },
-                            { name: 'მოლოდინში', value: stats.pendingAmount, color: '#3b82f6' },
-                            { name: 'ვადაგადაცილებული', value: stats.overdueAmount, color: '#ef4444' }
+                            { name: 'გადახდილი', value: stats?.paidAmount || 0, color: '#10b981' },
+                            { name: 'მოლოდინში', value: stats?.pendingAmount || 0, color: '#3b82f6' },
+                            { name: 'ვადაგადაცილებული', value: stats?.overdueAmount || 0, color: '#ef4444' }
                           ].map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
