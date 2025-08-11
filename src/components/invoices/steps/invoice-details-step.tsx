@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { UseFormReturn } from 'react-hook-form'
 import { Plus, Trash2, Copy, Calendar } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,7 @@ import { Badge } from '@/components/ui/badge'
 import { Calendar as CalendarComponent } from '@/components/ui/calendar'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
+import { Controller } from 'react-hook-form'
 import { format } from 'date-fns'
 import { ka } from 'date-fns/locale'
 
@@ -32,7 +34,43 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
   const { watch, setValue, getValues, formState: { errors } } = form
   const formData = watch()
   
-  const { addItem, removeItem, duplicateItem, updateLineTotal } = useInvoiceForm()
+  // Item management functions
+  const addItem = () => {
+    const currentItems = getValues('items')
+    const newItem = {
+      description: '',
+      quantity: 1,
+      unit_price: 0,
+      line_total: 0,
+      sort_order: currentItems.length
+    }
+    setValue('items', [...currentItems, newItem])
+  }
+
+  const removeItem = (index: number) => {
+    const currentItems = getValues('items')
+    if (currentItems.length > 1) {
+      const updatedItems = currentItems
+        .filter((_, i) => i !== index)
+        .map((item, i) => ({ ...item, sort_order: i }))
+      setValue('items', updatedItems)
+    }
+  }
+
+  const duplicateItem = (index: number) => {
+    const currentItems = getValues('items')
+    const itemToDuplicate = currentItems[index]
+    const newItem = {
+      ...itemToDuplicate,
+      sort_order: currentItems.length
+    }
+    setValue('items', [...currentItems, newItem])
+  }
+
+  const updateLineTotal = (index: number, quantity: number, unitPrice: number) => {
+    const lineTotal = Math.round(quantity * unitPrice * 100) / 100
+    setValue(`items.${index}.line_total`, lineTotal)
+  }
 
   // Auto-calculate due date when due_days changes
   const handleDueDaysChange = (dueDays: number) => {
@@ -41,22 +79,52 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
   }
 
   const ItemRow = ({ index }: { index: number }) => {
-    const item = watch(`items.${index}`) || { description: '', quantity: 1, unit_price: 0, line_total: 0, sort_order: 0 }
+    const watchedItem = watch(`items.${index}`)
+    const [localDescription, setLocalDescription] = useState(watchedItem?.description ?? '')
+    const [localQuantity, setLocalQuantity] = useState((watchedItem?.quantity ?? 1).toString())
+    const [localUnitPrice, setLocalUnitPrice] = useState((watchedItem?.unit_price ?? 0).toString())
+    
+    const item = {
+      description: watchedItem?.description ?? '',
+      quantity: watchedItem?.quantity ?? 1,
+      unit_price: watchedItem?.unit_price ?? 0,
+      line_total: watchedItem?.line_total ?? 0,
+      sort_order: watchedItem?.sort_order ?? 0
+    }
+
+    // Sync local state with form state when items change
+    useEffect(() => {
+      setLocalDescription(watchedItem?.description ?? '')
+      setLocalQuantity((watchedItem?.quantity ?? 1).toString())
+      setLocalUnitPrice((watchedItem?.unit_price ?? 0).toString())
+    }, [watchedItem?.description, watchedItem?.quantity, watchedItem?.unit_price])
     
     const handleQuantityChange = (value: string) => {
-      const quantity = parseFloat(value) || 0
+      setLocalQuantity(value)
+    }
+
+    const handleQuantityBlur = () => {
+      const quantity = parseFloat(localQuantity) || 0
       setValue(`items.${index}.quantity`, quantity)
       updateLineTotal(index, quantity, item.unit_price)
     }
 
     const handleUnitPriceChange = (value: string) => {
-      const unitPrice = parseFloat(value) || 0
+      setLocalUnitPrice(value)
+    }
+
+    const handleUnitPriceBlur = () => {
+      const unitPrice = parseFloat(localUnitPrice) || 0
       setValue(`items.${index}.unit_price`, unitPrice)
       updateLineTotal(index, item.quantity, unitPrice)
     }
 
     const handleDescriptionChange = (value: string) => {
-      setValue(`items.${index}.description`, value)
+      setLocalDescription(value)
+    }
+
+    const handleDescriptionBlur = () => {
+      setValue(`items.${index}.description`, localDescription)
     }
 
     return (
@@ -68,9 +136,11 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
             <Textarea
               id={`item-${index}-description`}
               placeholder="პროდუქტის ან სერვისის აღწერა..."
-              value={item.description}
+              value={localDescription}
               onChange={(e) => handleDescriptionChange(e.target.value)}
+              onBlur={handleDescriptionBlur}
               className="min-h-[60px] resize-none"
+              rows={2}
             />
             {errors.items?.[index]?.description && (
               <p className="text-sm text-red-600 mt-1">
@@ -87,8 +157,10 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
               type="number"
               step="0.001"
               min="0"
-              value={item.quantity.toString()}
+              value={localQuantity}
               onChange={(e) => handleQuantityChange(e.target.value)}
+              onBlur={handleQuantityBlur}
+              placeholder="0"
             />
             {errors.items?.[index]?.quantity && (
               <p className="text-sm text-red-600 mt-1">
@@ -105,8 +177,10 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
               type="number"
               step="0.01"
               min="0"
-              value={item.unit_price.toString()}
+              value={localUnitPrice}
               onChange={(e) => handleUnitPriceChange(e.target.value)}
+              onBlur={handleUnitPriceBlur}
+              placeholder="0.00"
             />
             {errors.items?.[index]?.unit_price && (
               <p className="text-sm text-red-600 mt-1">
