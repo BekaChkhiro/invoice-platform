@@ -125,19 +125,16 @@
     {
       "source": "/",
       "destination": "/dashboard",
-      "permanent": false,
       "statusCode": 307
     },
     {
       "source": "/login",
       "destination": "/auth/login",
-      "permanent": true,
       "statusCode": 301
     },
     {
       "source": "/register",
       "destination": "/auth/register",
-      "permanent": true,
       "statusCode": 301
     }
   ],
