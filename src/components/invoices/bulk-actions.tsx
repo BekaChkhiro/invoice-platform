@@ -22,7 +22,7 @@ interface BulkOperation {
   id: string
   type: 'send' | 'mark-paid' | 'delete' | 'export'
   label: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   total: number
   completed: number
   failed: number
@@ -52,11 +52,11 @@ export function BulkActions({ selectedInvoices, onClearSelection, onRefresh }: B
     setRunningOperations(prev => prev.filter(op => op.id !== id))
   }
 
-  const startOperation = (type: string, label: string, icon: any) => {
+  const startOperation = (type: string, label: string, icon: React.ComponentType<{ className?: string }>) => {
     const operationId = `${type}-${Date.now()}`
     const operation: BulkOperation = {
       id: operationId,
-      type: type as any,
+      type: type as 'send' | 'mark-paid' | 'delete' | 'export',
       label,
       icon,
       total: selectedCount,

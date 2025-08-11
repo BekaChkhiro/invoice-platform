@@ -140,7 +140,7 @@ function RevenueChart({ stats }: { stats: InvoiceStats }) {
     return data
   }, [stats])
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; color: string }>; label?: string }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border rounded-lg shadow-lg">
@@ -225,14 +225,14 @@ function StatusDistributionChart({ stats }: { stats: InvoiceStats }) {
     return data
   }, [stats])
 
-  const CustomPieTooltip = ({ active, payload }: any) => {
+  const CustomPieTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: { name: string; value: number; color: string; amount?: number } }> }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
         <div className="bg-white p-3 border rounded-lg shadow-lg">
           <p className="font-medium">{data.name}</p>
           <p className="text-sm">რაოდენობა: {data.value}</p>
-          {data.amount > 0 && (
+          {data.amount && data.amount > 0 && (
             <p className="text-sm">ღირებულება: ₾{data.amount.toLocaleString('ka-GE')}</p>
           )}
         </div>
@@ -261,7 +261,7 @@ function StatusDistributionChart({ stats }: { stats: InvoiceStats }) {
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+            label={({ name, percent }) => `${name} ${percent ? (percent * 100).toFixed(0) : 0}%`}
             outerRadius={80}
             fill="#8884d8"
             dataKey="value"
@@ -293,7 +293,7 @@ function TopClientsChart({ stats }: { stats: InvoiceStats }) {
     }))
   }, [stats.topClients])
 
-  const CustomBarTooltip = ({ active, payload, label }: any) => {
+  const CustomBarTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ payload: { fullName: string; amount: number; invoices: number } }>; label?: string }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload
       return (
@@ -323,7 +323,7 @@ function TopClientsChart({ stats }: { stats: InvoiceStats }) {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={clientsData}
-          layout="horizontalBar"
+          layout="vertical"
           margin={{ top: 5, right: 30, left: 60, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />

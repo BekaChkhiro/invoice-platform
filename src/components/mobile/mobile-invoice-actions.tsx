@@ -28,7 +28,7 @@ import { cn } from '@/lib/utils'
 interface SwipeAction {
   id: string
   label: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   color: string
   bgColor: string
   action: () => void
@@ -149,7 +149,7 @@ export function SwipeableInvoiceCard({
     setShowDeleteDialog(false)
   }
 
-  const handleDragEnd = (event: any, info: PanInfo) => {
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const swipeThreshold = 80
     const swipeDistance = Math.abs(info.offset.x)
     

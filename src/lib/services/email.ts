@@ -408,7 +408,7 @@ export const sendInvoiceEmail = async (
     const textContent = replaceTemplateVariables(template.textContent, variables)
 
     // Generate PDF attachment if requested
-    let attachments: EmailAttachment[] = []
+    const attachments: EmailAttachment[] = []
     if (options.attachPDF !== false) {
       try {
         const pdfBlob = await generateInvoicePDF(invoice)

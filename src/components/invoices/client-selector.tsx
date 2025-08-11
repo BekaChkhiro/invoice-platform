@@ -29,7 +29,7 @@ interface ClientSelectorProps {
 }
 
 interface ClientDisplayProps {
-  client: any
+  client: { id: string; full_name: string; name?: string; email: string; company_name?: string; type?: string; tax_id?: string; phone?: string }
   isSelected?: boolean
   onClick?: () => void
 }
@@ -91,7 +91,7 @@ export function ClientSelector({
     localStorage.setItem('recent-clients', JSON.stringify(updated))
   }
 
-  const handleAddClient = (newClient: any) => {
+  const handleAddClient = (newClient: { id: string; full_name: string; email: string }) => {
     setShowAddDialog(false)
     onValueChange(newClient.id)
   }

@@ -140,9 +140,9 @@ export function LimitWarning({
   const WarningIcon = warningLevel.icon
   const remaining = usage.remaining || Math.max(0, usage.limit - usage.used)
 
-  // Toast variant
-  if (variant === 'toast') {
-    React.useEffect(() => {
+  // Toast variant effect - must be called before any conditional returns
+  React.useEffect(() => {
+    if (variant === 'toast') {
       toast.error(warningLevel.title, {
         description: `${resourceConfig.nameGenitive} დარჩენილია: ${remaining} ${resourceConfig.unit}`,
         duration: 5000,
@@ -151,8 +151,11 @@ export function LimitWarning({
           onClick: handleUpgrade,
         },
       })
-    }, [warningLevel.title, resourceConfig, remaining, handleUpgrade])
-    
+    }
+  }, [variant, warningLevel.title, resourceConfig, remaining, handleUpgrade])
+
+  // Return early for toast variant
+  if (variant === 'toast') {
     return null
   }
 

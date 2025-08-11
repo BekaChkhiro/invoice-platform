@@ -100,13 +100,13 @@ export const clientService = {
         }
         
         // Check email duplicate
-        let emailCheckIndex = data.type === 'company' && data.tax_id ? 1 : 0
+        const emailCheckIndex = data.type === 'company' && data.tax_id ? 1 : 0
         if (data.email && data.email.trim() !== '' && results[emailCheckIndex]?.data) {
           throw new Error(`კლიენტი ელ.ფოსტით "${data.email}" უკვე არსებობს`)
         }
         
         // Check name duplicate
-        let nameCheckIndex = emailCheckIndex + (data.email && data.email.trim() !== '' ? 1 : 0)
+        const nameCheckIndex = emailCheckIndex + (data.email && data.email.trim() !== '' ? 1 : 0)
         if (data.name && results[nameCheckIndex]?.data) {
           throw new Error(`კლიენტი სახელით "${data.name}" უკვე არსებობს`)
         }

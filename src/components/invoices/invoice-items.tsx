@@ -218,7 +218,7 @@ export function InvoiceItems({
 interface InvoiceItemRowProps {
   index: number
   control: Control<CreateInvoice | UpdateInvoice>
-  errors?: any
+  errors?: Record<string, { message?: string }> | undefined
   currencySymbol: string
   onRemove: () => void
   onDuplicate: () => void

@@ -249,7 +249,7 @@ export function ClientStatCard({
   title: string
   value: string
   subtitle?: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   color?: 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'gray'
   trend?: string
   badge?: string

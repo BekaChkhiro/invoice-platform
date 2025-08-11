@@ -175,7 +175,7 @@ export function StatCard({
   title: string
   value: string
   subtitle?: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   color?: 'blue' | 'green' | 'red' | 'yellow' | 'gray'
   trend?: string
 }) {

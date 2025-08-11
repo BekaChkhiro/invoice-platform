@@ -33,7 +33,7 @@ interface QuickAction {
   id: string
   title: string
   description: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   color: string
   href?: string
   onClick?: () => void

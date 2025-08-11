@@ -22,7 +22,7 @@ interface StatCard {
   value: string
   change?: number
   changeType: 'increase' | 'decrease' | 'neutral'
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   description: string
   color: string
   href?: string

@@ -15,7 +15,7 @@ import { useHaptics } from '@/lib/utils/haptics'
 interface MobileNavItem {
   id: string
   label: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   href: string
   badge?: number
   disabled?: boolean
@@ -25,7 +25,7 @@ interface MobileNavItem {
 interface FloatingActionItem {
   id: string
   label: string
-  icon: any
+  icon: React.ComponentType<{ className?: string }>
   onClick: () => void
   color: string
 }
