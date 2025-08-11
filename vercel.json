@@ -125,19 +125,17 @@
       "source": "/",
       "destination": "/dashboard",
       "statusCode": 307
-    },
-    {
-      "source": "/login",
-      "destination": "/auth/login",
-      "statusCode": 301
-    },
-    {
-      "source": "/register",
-      "destination": "/auth/register",
-      "statusCode": 301
     }
   ],
   "rewrites": [
+    {
+      "source": "/login",
+      "destination": "/auth/login"
+    },
+    {
+      "source": "/register",
+      "destination": "/auth/register"
+    },
     {
       "source": "/healthz",
       "destination": "/api/health"
