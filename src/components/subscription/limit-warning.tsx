@@ -121,28 +121,23 @@ export function LimitWarning({
 
   const resourceConfig = RESOURCE_CONFIGS[resourceType]
 
-  // Don't show warning if no warning level or dismissed
-  if (!warningLevel || isDismissed) return null
-
   const handleDismiss = () => {
     setIsDismissed(true)
     onDismiss?.()
   }
 
-  const handleUpgrade = () => {
+  const handleUpgrade = React.useCallback(() => {
     if (onUpgrade) {
       onUpgrade()
     } else {
       setShowUpgradeModal(true)
     }
-  }
-
-  const WarningIcon = warningLevel.icon
-  const remaining = usage.remaining || Math.max(0, usage.limit - usage.used)
+  }, [onUpgrade])
 
   // Toast variant effect - must be called before any conditional returns
   React.useEffect(() => {
-    if (variant === 'toast') {
+    if (variant === 'toast' && warningLevel) {
+      const remaining = usage.remaining || Math.max(0, usage.limit - usage.used)
       toast.error(warningLevel.title, {
         description: `${resourceConfig.nameGenitive} დარჩენილია: ${remaining} ${resourceConfig.unit}`,
         duration: 5000,
@@ -152,7 +147,13 @@ export function LimitWarning({
         },
       })
     }
-  }, [variant, warningLevel.title, resourceConfig, remaining, handleUpgrade])
+  }, [variant, warningLevel, resourceConfig, usage, handleUpgrade])
+
+  // Don't show warning if no warning level or dismissed
+  if (!warningLevel || isDismissed) return null
+
+  const WarningIcon = warningLevel.icon
+  const remaining = usage.remaining || Math.max(0, usage.limit - usage.used)
 
   // Return early for toast variant
   if (variant === 'toast') {

@@ -57,7 +57,7 @@ export function UserGuide({ children }: UserGuideProps) {
               
               <div className="border rounded-md p-4">
                 <h4 className="font-medium mb-2">4. პირველი ინვოისის შექმნა</h4>
-                <p>შექმენით თქვენი პირველი ინვოისი "ინვოისები" გვერდზე.</p>
+                <p>შექმენით თქვენი პირველი ინვოისი &ldquo;ინვოისები&rdquo; გვერდზე.</p>
               </div>
             </div>
           </TabsContent>
@@ -69,7 +69,7 @@ export function UserGuide({ children }: UserGuideProps) {
             <div className="space-y-4">
               <div className="border rounded-md p-4">
                 <h4 className="font-medium mb-2">1. ახალი ინვოისის შექმნა</h4>
-                <p>დააჭირეთ "ახალი ინვოისი" ღილაკს ინვოისების გვერდზე.</p>
+                <p>დააჭირეთ &ldquo;ახალი ინვოისი&rdquo; ღილაკს ინვოისების გვერდზე.</p>
               </div>
               
               <div className="border rounded-md p-4">
@@ -96,7 +96,7 @@ export function UserGuide({ children }: UserGuideProps) {
             <div className="space-y-4">
               <div className="border rounded-md p-4">
                 <h4 className="font-medium mb-2">1. კლიენტის დამატება</h4>
-                <p>დააჭირეთ "ახალი კლიენტი" ღილაკს კლიენტების გვერდზე.</p>
+                <p>დააჭირეთ &ldquo;ახალი კლიენტი&rdquo; ღილაკს კლიენტების გვერდზე.</p>
               </div>
               
               <div className="border rounded-md p-4">
