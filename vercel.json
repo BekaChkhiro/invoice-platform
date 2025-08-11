@@ -12,8 +12,7 @@
   "functions": {
     "src/app/api/**/*.ts": {
       "maxDuration": 30,
-      "memory": 1024,
-      "runtime": "nodejs18.x"
+      "memory": 1024
     },
     "src/app/api/invoices/*/pdf/route.ts": {
       "maxDuration": 60,
