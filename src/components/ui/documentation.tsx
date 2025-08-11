@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -156,7 +156,7 @@ export function FAQSection({ className }: FAQProps) {
   const faqItems = [
     {
       question: 'როგორ შევქმნა ინვოისი?',
-      answer: 'ინვოისის შესაქმნელად გადადით "ინვოისები" გვერდზე, დააჭირეთ "ახალი ინვოისი" ღილაკს, აირჩიეთ კლიენტი, დაამატეთ პროდუქტები და დააჭირეთ "შენახვა".',
+      answer: 'ინვოისის შესაქმნელად გადადით &ldquo;ინვოისები&rdquo; გვერდზე, დააჭირეთ &ldquo;ახალი ინვოისი&rdquo; ღილაკს, აირჩიეთ კლიენტი, დაამატეთ პროდუქტები და დააჭირეთ &ldquo;შენახვა&rdquo;.',
     },
     {
       question: 'როგორ გავაგზავნო ინვოისი ელ.ფოსტით?',
@@ -164,23 +164,23 @@ export function FAQSection({ className }: FAQProps) {
     },
     {
       question: 'როგორ დავამატო ახალი კლიენტი?',
-      answer: 'კლიენტის დასამატებლად გადადით "კლიენტები" გვერდზე, დააჭირეთ "ახალი კლიენტი" ღილაკს და შეავსეთ საჭირო ინფორმაცია.',
+      answer: 'კლიენტის დასამატებლად გადადით &ldquo;კლიენტები&rdquo; გვერდზე, დააჭირეთ &ldquo;ახალი კლიენტი&rdquo; ღილაკს და შეავსეთ საჭირო ინფორმაცია.',
     },
     {
       question: 'როგორ შევცვალო ჩემი კომპანიის ლოგო?',
-      answer: 'კომპანიის ლოგოს შესაცვლელად გადადით "პარამეტრები" გვერდზე, აირჩიეთ "კომპანიის ინფორმაცია" და ატვირთეთ ახალი ლოგო.',
+      answer: 'კომპანიის ლოგოს შესაცვლელად გადადით &ldquo;პარამეტრები&rdquo; გვერდზე, აირჩიეთ &ldquo;კომპანიის ინფორმაცია&rdquo; და ატვირთეთ ახალი ლოგო.',
     },
     {
       question: 'როგორ დავაგენერირო ანგარიშები?',
-      answer: 'ანგარიშების დასაგენერირებლად გადადით "ანალიტიკა" გვერდზე, აირჩიეთ სასურველი პერიოდი და ანგარიშის ტიპი, შემდეგ დააჭირეთ "დაგენერირება" ღილაკს.',
+      answer: 'ანგარიშების დასაგენერირებლად გადადით &ldquo;ანალიტიკა&rdquo; გვერდზე, აირჩიეთ სასურველი პერიოდი და ანგარიშის ტიპი, შემდეგ დააჭირეთ &ldquo;დაგენერირება&rdquo; ღილაკს.',
     },
     {
       question: 'როგორ დავამატო ახალი მომხმარებელი?',
-      answer: 'ახალი მომხმარებლის დასამატებლად გადადით "პარამეტრები" გვერდზე, აირჩიეთ "მომხმარებლები", დააჭირეთ "ახალი მომხმარებელი" და შეავსეთ საჭირო ინფორმაცია.',
+      answer: 'ახალი მომხმარებლის დასამატებლად გადადით &ldquo;პარამეტრები&rdquo; გვერდზე, აირჩიეთ &ldquo;მომხმარებლები&rdquo;, დააჭირეთ &ldquo;ახალი მომხმარებელი&rdquo; და შეავსეთ საჭირო ინფორმაცია.',
     },
     {
       question: 'როგორ შევცვალო ინვოისის შაბლონი?',
-      answer: 'ინვოისის შაბლონის შესაცვლელად გადადით "პარამეტრები" გვერდზე, აირჩიეთ "ინვოისის შაბლონები" და მოარგეთ სასურველი შაბლონი.',
+      answer: 'ინვოისის შაბლონის შესაცვლელად გადადით &ldquo;პარამეტრები&rdquo; გვერდზე, აირჩიეთ &ldquo;ინვოისის შაბლონები&rdquo; და მოარგეთ სასურველი შაბლონი.',
     },
     {
       question: 'როგორ დავამატო გადასახადი ინვოისში?',

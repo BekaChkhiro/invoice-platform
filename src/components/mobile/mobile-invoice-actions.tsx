@@ -166,7 +166,7 @@ export function SwipeableInvoiceCard({
     setActiveAction(null)
   }
 
-  const handleDrag = (event: any, info: PanInfo) => {
+  const handleDrag = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (disabled) return
 
     const swipeThreshold = 60

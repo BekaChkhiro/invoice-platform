@@ -49,7 +49,7 @@ interface AuthState {
 // CLIENT-SIDE HELPER FUNCTIONS
 // =====================================
 
-async function getCompanyClient(userId: string): Promise<{ data: Company | null; error: any }> {
+async function getCompanyClient(userId: string): Promise<{ data: Company | null; error: Error | null }> {
   const supabase = createClient()
   
   try {
@@ -95,7 +95,7 @@ async function getCompanyClient(userId: string): Promise<{ data: Company | null;
   }
 }
 
-async function getUserCreditsClient(userId: string): Promise<{ data: UserCredits | null; error: any }> {
+async function getUserCreditsClient(userId: string): Promise<{ data: UserCredits | null; error: Error | null }> {
   const supabase = createClient()
   
   try {

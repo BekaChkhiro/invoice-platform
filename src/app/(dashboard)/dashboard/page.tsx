@@ -1,7 +1,6 @@
 'use client'
 
 import { Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { RefreshCw, TrendingUp, AlertCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -30,8 +29,7 @@ export default function DashboardPage() {
 }
 
 function DashboardContent() {
-  const { user, company } = useAuth()
-  const searchParams = useSearchParams()
+  const { company } = useAuth()
   
   // Fetch dashboard statistics
   const { 

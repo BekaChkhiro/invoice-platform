@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { 
   Calendar, 
   Download, 
@@ -11,22 +10,16 @@ import {
   FileText, 
   Users, 
   BarChart3,
-  PieChart as PieChartIcon,
-  Filter,
   RefreshCw
 } from 'lucide-react'
 import { format, subDays, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns'
 import { ka } from 'date-fns/locale'
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
@@ -37,7 +30,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { DatePickerWithRange } from '@/components/ui/date-range-picker'
@@ -61,7 +53,6 @@ type AnalyticsPeriod = 'last7days' | 'last30days' | 'last90days' | 'thisMonth' |
 // =====================================
 
 export default function AnalyticsPage() {
-  const searchParams = useSearchParams()
   const { company } = useAuth()
   
   const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsPeriod>('last30days')

@@ -7,11 +7,11 @@ import * as React from "react"
 
 // Mock types for backward compatibility
 export interface SubscriptionContextValue {
-  currentPlan: any | null
-  subscription: any | null
-  usage: any
+  currentPlan: Record<string, unknown> | null
+  subscription: Record<string, unknown> | null
+  usage: Record<string, unknown>
   isLoading: boolean
-  error: any | null
+  error: Error | null
   hasFeature: (feature: string) => boolean
   features: Record<string, boolean>
   invoiceLimit: {
@@ -29,7 +29,7 @@ export interface SubscriptionContextValue {
   canExport: () => boolean
   canUseApi: () => boolean
   upgradePlan: (planId: string) => Promise<void>
-  incrementUsage: (type: any, amount?: number) => void
+  incrementUsage: (type: string, amount?: number) => void
   refreshData: () => Promise<void>
   requiresPlan: (requiredPlan: string) => boolean
   getPlanLevel: () => number

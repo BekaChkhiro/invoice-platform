@@ -2,20 +2,18 @@
 
 import { useState, useEffect } from 'react'
 import { UseFormReturn } from 'react-hook-form'
-import { Search, Plus, User, Building, Mail, Phone } from 'lucide-react'
+import { Search, Plus, User, Building } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form'
 
-// Import hooks
 import { useClientSearch, useClientDetails, useCreateClientInline } from '@/lib/hooks/use-client-search'
 import { InvoiceFormData } from '@/lib/hooks/use-invoice-form'
+import { Client } from '@/types/database'
 
 interface ClientSelectionStepProps {
   form: UseFormReturn<InvoiceFormData>
@@ -37,8 +35,7 @@ export function ClientSelectionStep({ form }: ClientSelectionStepProps) {
   } = useClientSearch()
 
   const {
-    data: selectedClient,
-    isLoading: clientDetailsLoading
+    data: selectedClient
   } = useClientDetails(selectedClientId)
 
   const {
@@ -65,7 +62,7 @@ export function ClientSelectionStep({ form }: ClientSelectionStepProps) {
     }
   }, [suggestions, hasQuery, setValue, clearSearch])
 
-  const handleClientSelect = (client: any) => {
+  const handleClientSelect = (client: Client) => {
     setValue('client_id', client.id)
     clearSearch()
   }
@@ -94,7 +91,7 @@ export function ClientSelectionStep({ form }: ClientSelectionStepProps) {
     }
   }
 
-  const ClientCard = ({ client, onClick, isSelected = false }: any) => (
+  const ClientCard = ({ client, onClick, isSelected = false }: { client: Client; onClick: (client: Client) => void; isSelected?: boolean }) => (
     <div 
       className={`p-3 border rounded-lg cursor-pointer transition-all hover:bg-gray-50 hover:border-gray-300 ${
         isSelected ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-200' : 'border-gray-200'
