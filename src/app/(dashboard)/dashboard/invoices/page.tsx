@@ -11,12 +11,19 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 
 import { useInvoiceList } from '@/lib/hooks/use-invoice-list'
+import { useInvoiceRealtime } from '@/lib/hooks/use-invoice-realtime'
+import { useAuth } from '@/lib/hooks/use-auth'
 import { InvoiceStatsCards } from '@/components/invoices/invoice-stats-cards'
 import { InvoiceFilters } from '@/components/invoices/invoice-filters'
 import { InvoiceTable } from '@/components/invoices/invoice-table'
 import { BulkActions } from '@/components/invoices/bulk-actions'
 
 export default function InvoicesPage() {
+  const { company } = useAuth()
+  
+  // Enable real-time subscriptions for invoices
+  useInvoiceRealtime(company?.id)
+  
   const {
     // Data
     invoices,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { 
   LineChart, 
   Line, 
@@ -23,8 +23,11 @@ import { ka } from 'date-fns/locale'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { TrendingUp, TrendingDown } from 'lucide-react'
 
 import type { InvoiceStats } from '@/lib/services/invoice'
+import { useRevenueTrends } from '@/lib/hooks/use-invoices'
 
 // =====================================
 // TYPES AND INTERFACES
@@ -40,6 +43,8 @@ interface ChartsProps {
 // =====================================
 
 export function Charts({ stats, loading }: ChartsProps) {
+  const [selectedPeriod, setSelectedPeriod] = useState<1 | 3 | 6 | 12>(12)
+
   if (loading) {
     return <ChartsSkeleton />
   }
@@ -48,24 +53,43 @@ export function Charts({ stats, loading }: ChartsProps) {
     return <ChartsError />
   }
 
+  const periodOptions = [
+    { value: 1 as const, label: '1 თვე' },
+    { value: 3 as const, label: '3 თვე' },
+    { value: 6 as const, label: '6 თვე' },
+    { value: 12 as const, label: '12 თვე' }
+  ]
+
   return (
     <div className="space-y-6">
       
       {/* Revenue Trend Chart */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            შემოსავლების ტენდენცია
-            <Badge variant="secondary" className="ml-auto">
-              ბოლო 12 თვე
-            </Badge>
-          </CardTitle>
-          <CardDescription>
-            თვიური შემოსავალი და ზრდის ტენდენცია
-          </CardDescription>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>შემოსავლების ტენდენცია</CardTitle>
+              <CardDescription>
+                თვიური შემოსავალი და ზრდის ტენდენცია
+              </CardDescription>
+            </div>
+            <div className="flex gap-1 mt-3 sm:mt-0">
+              {periodOptions.map((option) => (
+                <Button
+                  key={option.value}
+                  variant={selectedPeriod === option.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedPeriod(option.value)}
+                  className="text-xs"
+                >
+                  {option.label}
+                </Button>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <RevenueChart stats={stats} />
+          <RevenueChart period={selectedPeriod} />
         </CardContent>
       </Card>
 
@@ -106,85 +130,151 @@ export function Charts({ stats, loading }: ChartsProps) {
 // REVENUE TREND CHART
 // =====================================
 
-function RevenueChart({ stats }: { stats: InvoiceStats }) {
-  // Generate mock data for 12 months
-  const revenueData = useMemo(() => {
-    const data = []
-    const now = new Date()
-    
-    for (let i = 11; i >= 0; i--) {
-      const date = subMonths(startOfMonth(now), i)
-      const monthName = format(date, 'MMM', { locale: ka })
-      
-      // For demo purposes, create some sample data
-      // In real app, this would come from actual historical data
-      let revenue = 0
-      if (i === 0) {
-        // Current month
-        revenue = stats.thisMonthRevenue
-      } else if (i === 1) {
-        // Last month
-        revenue = stats.lastMonthRevenue
-      } else {
-        // Mock data for other months
-        revenue = Math.random() * stats.thisMonthRevenue * 1.5
-      }
-      
-      data.push({
-        month: monthName,
-        revenue: Math.round(revenue),
-        date: date.toISOString()
-      })
-    }
-    
-    return data
-  }, [stats])
+function RevenueChart({ period }: { period: 1 | 3 | 6 | 12 }) {
+  const { data: trendsData, isLoading, error } = useRevenueTrends(period)
 
-  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; color: string }>; label?: string }) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; color: string; dataKey: string }>; label?: string }) => {
     if (active && payload && payload.length) {
+      const monthData = trendsData?.monthlyData.find((d: any) => d.month === label)
+      
       return (
         <div className="bg-white p-3 border rounded-lg shadow-lg">
-          <p className="font-medium">{label}</p>
-          <p className="text-green-600">
-            შემოსავალი: ₾{payload[0].value.toLocaleString('ka-GE')}
-          </p>
+          <p className="font-medium text-gray-900 mb-2">{monthData?.fullMonth || label}</p>
+          <div className="space-y-1">
+            <p className="text-sm flex items-center justify-between">
+              <span>სულ შემოსავალი:</span>
+              <span className="font-semibold text-blue-600">₾{monthData?.totalRevenue?.toLocaleString('ka-GE') || '0'}</span>
+            </p>
+            <p className="text-sm flex items-center justify-between">
+              <span>გადახდილი:</span>
+              <span className="font-semibold text-green-600">₾{monthData?.paidRevenue?.toLocaleString('ka-GE') || '0'}</span>
+            </p>
+            <p className="text-sm flex items-center justify-between">
+              <span>მოლოდინში:</span>
+              <span className="font-semibold text-orange-600">₾{monthData?.pendingRevenue?.toLocaleString('ka-GE') || '0'}</span>
+            </p>
+            <p className="text-sm flex items-center justify-between">
+              <span>ინვოისები:</span>
+              <span className="font-semibold text-gray-600">{monthData?.invoiceCount || 0}</span>
+            </p>
+          </div>
         </div>
       )
     }
     return null
   }
 
+  if (isLoading) {
+    return (
+      <div className="h-[300px] w-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+          <p className="text-sm text-gray-500">ტენდენციის ჩატვირთვა...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !trendsData) {
+    return (
+      <div className="h-[300px] w-full flex items-center justify-center">
+        <div className="text-center text-gray-500">
+          <p className="text-sm">შემოსავლების ტენდენცია ვერ ჩაიტვირთა</p>
+          <p className="text-xs mt-1">სცადეთ ხელახლა</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!trendsData.monthlyData || trendsData.monthlyData.length === 0) {
+    return (
+      <div className="h-[300px] w-full flex items-center justify-center">
+        <div className="text-center text-gray-500">
+          <p className="text-sm">მონაცემები არ მოიძებნა</p>
+          <p className="text-xs mt-1">შექმენით პირველი ინვოისი</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show growth indicator
+  const growthPercentage = trendsData.summary.growthPercentage
+  const isPositiveGrowth = growthPercentage > 0
+
   return (
-    <div className="h-[300px] w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={revenueData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis 
-            dataKey="month" 
-            stroke="#6b7280"
-            fontSize={12}
-          />
-          <YAxis 
-            stroke="#6b7280"
-            fontSize={12}
-            tickFormatter={(value) => `₾${(value / 1000).toFixed(0)}K`}
-          />
-          <Tooltip content={<CustomTooltip />} />
-          <defs>
-            <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0.1}/>
-            </linearGradient>
-          </defs>
-          <Area 
-            type="monotone" 
-            dataKey="revenue" 
-            stroke="#0ea5e9" 
-            strokeWidth={2}
-            fill="url(#revenueGradient)"
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+    <div className="space-y-3">
+      {/* Growth indicator */}
+      <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center gap-2">
+          {isPositiveGrowth ? (
+            <TrendingUp className="h-4 w-4 text-green-600" />
+          ) : (
+            <TrendingDown className="h-4 w-4 text-red-600" />
+          )}
+          <span className={isPositiveGrowth ? 'text-green-600' : 'text-red-600'}>
+            {growthPercentage > 0 ? '+' : ''}{growthPercentage.toFixed(1)}%
+          </span>
+          <span className="text-gray-500">ზრდა ამ პერიოდში</span>
+        </div>
+        <div className="text-gray-600">
+          საშუალო: ₾{trendsData.summary.averageMonthlyRevenue.toLocaleString('ka-GE')}/თვე
+        </div>
+      </div>
+
+      <div className="h-[300px] w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={trendsData.monthlyData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis 
+              dataKey="month" 
+              stroke="#6b7280"
+              fontSize={12}
+            />
+            <YAxis 
+              stroke="#6b7280"
+              fontSize={12}
+              tickFormatter={(value) => {
+                if (value >= 1000000) {
+                  return `₾${(value / 1000000).toFixed(1)}M`
+                } else if (value >= 1000) {
+                  return `₾${(value / 1000).toFixed(0)}K`
+                } else {
+                  return `₾${value}`
+                }
+              }}
+            />
+            <Tooltip content={<CustomTooltip />} />
+            <defs>
+              <linearGradient id="totalRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0.1}/>
+              </linearGradient>
+              <linearGradient id="paidRevenueGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+              </linearGradient>
+            </defs>
+            <Area 
+              type="monotone" 
+              dataKey="totalRevenue" 
+              stackId="1"
+              stroke="#0ea5e9" 
+              strokeWidth={2}
+              fill="url(#totalRevenueGradient)"
+              name="სულ შემოსავალი"
+            />
+            <Area 
+              type="monotone" 
+              dataKey="paidRevenue" 
+              stackId="2"
+              stroke="#10b981" 
+              strokeWidth={1}
+              fill="url(#paidRevenueGradient)"
+              name="გადახდილი"
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   )
 }

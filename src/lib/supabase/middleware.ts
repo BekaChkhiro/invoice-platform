@@ -53,12 +53,16 @@ export async function updateSession(request: NextRequest) {
   // Protected routes that require authentication
   const protectedRoutes = ['/dashboard', '/invoices', '/clients', '/settings']
   const authRoutes = ['/login', '/register', '/reset-password']
+  const publicRoutes = ['/api/invoices/'] // Public PDF URLs with tokens
   const pathname = request.nextUrl.pathname
 
+  // Check if the current path is a public route (like public PDF)
+  const isPublicRoute = pathname.includes('/pdf/public')
+  
   // Check if the current path is protected
   const isProtectedRoute = protectedRoutes.some(route => 
     pathname.startsWith(route)
-  )
+  ) && !isPublicRoute
 
   // Check if the current path is an auth route
   const isAuthRoute = authRoutes.some(route => 

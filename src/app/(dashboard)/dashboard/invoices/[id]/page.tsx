@@ -55,6 +55,7 @@ import {
   updateInvoiceStatus
 } from '@/lib/services/invoice'
 import { clientService } from '@/lib/services/client'
+import { useInvoiceRealtimeDetail } from '@/lib/hooks/use-invoice-realtime'
 import type { Invoice, Client } from '@/types/database'
 
 interface InvoiceWithItems extends Invoice {
@@ -80,6 +81,9 @@ export default function InvoiceDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+
+  // Enable real-time updates for this specific invoice
+  useInvoiceRealtimeDetail(invoiceId)
 
   // Load invoice data
   useEffect(() => {
@@ -200,7 +204,7 @@ export default function InvoiceDetailPage() {
       setActionLoading(true)
       // await sendInvoiceEmail(invoice.id) // TODO: Implement email sending
       throw new Error('ელფოსტით გაგზავნა ჯერ არ არის იმპლემენტირებული')
-      setInvoice({ ...invoice, status: 'sent', sent_at: new Date().toISOString() })
+      setInvoice({ ...invoice, status: 'sent', sent_at: new Date().toISOString(), items: invoice.items || [] })
       toast({
         title: 'ინვოისი გაიგზავნა',
         description: 'ინვოისი წარმატებით გაიგზავნა ელფოსტით',
@@ -329,9 +333,10 @@ export default function InvoiceDetailPage() {
   }
 
   // Format currency
-  const formatCurrency = (amount: number | undefined | null, currency = 'GEL'): string => {
+  const formatCurrency = (amount: number | undefined | null, currency: string | null = 'GEL'): string => {
+    const safeCurrency = currency || 'GEL'
     const symbols = { GEL: '₾', USD: '$', EUR: '€' }
-    const symbol = symbols[currency as keyof typeof symbols] || currency
+    const symbol = symbols[safeCurrency as keyof typeof symbols] || safeCurrency
     const validAmount = amount || 0
     
     return `${symbol}${validAmount.toLocaleString('ka-GE', {
@@ -699,7 +704,7 @@ export default function InvoiceDetailPage() {
                     <div className="text-sm">
                       <div className="font-medium">ინვოისი გაიგზავნა</div>
                       <div className="text-muted-foreground">
-                        {format(new Date(invoice.sent_at), 'dd MMM yyyy, HH:mm', { locale: ka })}
+                        {format(new Date(invoice.sent_at || ''), 'dd MMM yyyy, HH:mm', { locale: ka })}
                       </div>
                     </div>
                   </div>

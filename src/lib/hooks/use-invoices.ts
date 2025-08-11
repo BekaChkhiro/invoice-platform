@@ -34,6 +34,7 @@ export const invoiceKeys = {
   details: () => [...invoiceKeys.all, 'detail'] as const,
   detail: (id: string) => [...invoiceKeys.details(), id] as const,
   stats: (companyId: string) => [...invoiceKeys.all, 'stats', companyId] as const,
+  revenueTrends: (period: number) => [...invoiceKeys.all, 'revenue-trends', period] as const,
   infinite: (filter: InvoiceFilter) => [...invoiceKeys.all, 'infinite', filter] as const,
   permissions: () => [...invoiceKeys.all, 'permissions'] as const,
   permission: (id: string) => [...invoiceKeys.permissions(), id] as const
@@ -149,6 +150,29 @@ export const useInvoiceStats = (companyId: string) => {
         throw new Error(response.error)
       }
       return response.data
+    }
+  })
+}
+
+/**
+ * Get revenue trends data for specified period
+ */
+export const useRevenueTrends = (period: 1 | 3 | 6 | 12 = 12) => {
+  return useQuery({
+    queryKey: invoiceKeys.revenueTrends(period),
+    queryFn: async () => {
+      const response = await fetch(`/api/invoices/revenue-trends?period=${period}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch revenue trends')
+      }
+      return response.json()
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes for trends data
+    cacheTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: true,
+    retry: 3,
+    onError: (error) => {
+      console.error('Failed to fetch revenue trends:', error)
     }
   })
 }

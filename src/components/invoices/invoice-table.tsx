@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, Eye, Edit, Copy, Mail, Check, Trash2, FileText, ExternalLink } from 'lucide-react'
+import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, Eye, Edit, Copy, Mail, Check, Trash2, FileText, ExternalLink, Link as LinkIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { ka } from 'date-fns/locale'
 
@@ -97,13 +97,18 @@ export function InvoiceTable({
   const canDelete = (invoice: Invoice) => invoice.status === 'draft'
   const canMarkPaid = (invoice: Invoice) => ['sent', 'overdue'].includes(invoice.status)
   const canSend = (invoice: Invoice) => ['draft'].includes(invoice.status)
+  const canChangeStatus = (invoice: Invoice) => true // Allow changing to any status
 
-  const handleMarkAsPaid = (invoice: Invoice) => {
+  const handleStatusChange = (invoice: Invoice, newStatus: Invoice['status']) => {
     updateStatus({
       id: invoice.id,
-      status: 'paid',
-      paid_at: new Date()
+      status: newStatus,
+      paid_at: newStatus === 'paid' ? new Date() : undefined
     })
+  }
+
+  const handleMarkAsPaid = (invoice: Invoice) => {
+    handleStatusChange(invoice, 'paid')
   }
 
   const handleSendEmail = async (invoice: Invoice) => {
@@ -136,6 +141,21 @@ export function InvoiceTable({
       setDeleteInvoiceId(null)
     } else {
       setDeleteInvoiceId(invoice.id)
+    }
+  }
+
+  const handleGetPublicPdfUrl = async (invoice: Invoice) => {
+    try {
+      const response = await fetch(`/api/invoices/${invoice.id}/pdf-url`)
+      if (response.ok) {
+        const data = await response.json()
+        // Copy URL to clipboard
+        await navigator.clipboard.writeText(data.public_pdf_url)
+        // Show success notification or update UI
+        console.log('Public PDF URL copied to clipboard:', data.public_pdf_url)
+      }
+    } catch (error) {
+      console.error('Failed to get public PDF URL:', error)
     }
   }
 
@@ -330,6 +350,11 @@ export function InvoiceTable({
                           </a>
                         </DropdownMenuItem>
 
+                        <DropdownMenuItem onClick={() => handleGetPublicPdfUrl(invoice)}>
+                          <LinkIcon className="h-4 w-4 mr-2" />
+                          საჯარო PDF ბმული
+                        </DropdownMenuItem>
+
                         {canEdit(invoice) && (
                           <DropdownMenuItem asChild>
                             <Link 
@@ -351,11 +376,29 @@ export function InvoiceTable({
                           </DropdownMenuItem>
                         )}
 
-                        {canMarkPaid(invoice) && (
-                          <DropdownMenuItem onClick={() => handleMarkAsPaid(invoice)}>
-                            <Check className="h-4 w-4 mr-2" />
-                            მონიშვნა გადახდილად
-                          </DropdownMenuItem>
+                        {canChangeStatus(invoice) && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleStatusChange(invoice, 'draft')} disabled={invoice.status === 'draft'}>
+                              <Check className="h-4 w-4 mr-2" />
+                              მონახაზად მონიშვნა
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(invoice, 'sent')} disabled={invoice.status === 'sent'}>
+                              <Check className="h-4 w-4 mr-2" />
+                              გაგზავნილად მონიშვნა
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(invoice, 'paid')} disabled={invoice.status === 'paid'}>
+                              <Check className="h-4 w-4 mr-2" />
+                              გადახდილად მონიშვნა
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(invoice, 'overdue')} disabled={invoice.status === 'overdue'}>
+                              <Check className="h-4 w-4 mr-2" />
+                              ვადაგადაცილებულად მონიშვნა
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleStatusChange(invoice, 'cancelled')} disabled={invoice.status === 'cancelled'}>
+                              <Check className="h-4 w-4 mr-2" />
+                              გაუქმებულად მონიშვნა
+                            </DropdownMenuItem>
+                          </>
                         )}
 
                         <DropdownMenuItem onClick={() => handleDuplicate(invoice)}>

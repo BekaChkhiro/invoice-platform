@@ -47,7 +47,7 @@ export interface InvoiceStats {
 const DEFAULT_FILTERS: InvoiceFilters = {
   status: 'all',
   search: '',
-  limit: 20,
+  limit: 10,
   offset: 0,
   sort_by: 'issue_date',
   sort_order: 'desc'
@@ -68,7 +68,7 @@ export function useInvoiceList() {
       date_from: searchParams.get('date_from') || undefined,
       date_to: searchParams.get('date_to') || undefined,
       search: searchParams.get('search') || DEFAULT_FILTERS.search,
-      limit: parseInt(searchParams.get('limit') || '20'),
+      limit: parseInt(searchParams.get('limit') || '10'),
       offset: parseInt(searchParams.get('offset') || '0'),
       sort_by: (searchParams.get('sort_by') as InvoiceFilters['sort_by']) || DEFAULT_FILTERS.sort_by,
       sort_order: (searchParams.get('sort_order') as InvoiceFilters['sort_order']) || DEFAULT_FILTERS.sort_order

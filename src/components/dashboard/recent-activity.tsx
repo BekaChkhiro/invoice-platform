@@ -209,7 +209,7 @@ export function RecentActivity({ companyId }: RecentActivityProps) {
       </CardHeader>
       
       <CardContent className="p-0">
-        <ScrollArea className="h-[400px]">
+        <ScrollArea className="h-[660px]">
           <div className="p-6 pt-0 space-y-6">
             
             {/* Today */}
@@ -399,8 +399,9 @@ function RecentActivitySkeleton() {
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-4">
-        {Array.from({ length: 6 }).map((_, i) => (
+      <CardContent className="p-0">
+        <div className="h-[660px] p-6 space-y-4">
+          {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex items-start gap-3">
             <Skeleton className="h-8 w-8 rounded-full flex-shrink-0" />
             <div className="flex-1 space-y-2">
@@ -410,6 +411,7 @@ function RecentActivitySkeleton() {
             <Skeleton className="h-3 w-16" />
           </div>
         ))}
+        </div>
       </CardContent>
     </Card>
   )

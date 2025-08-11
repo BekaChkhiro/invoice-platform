@@ -65,21 +65,8 @@ export async function PATCH(
       )
     }
 
-    // Validate status transitions
-    const validTransitions: Record<string, string[]> = {
-      draft: ['sent', 'cancelled'],
-      sent: ['paid', 'overdue', 'cancelled'],
-      paid: [], // No transitions from paid
-      overdue: ['paid', 'cancelled'],
-      cancelled: ['draft'] // Allow reopening cancelled invoices
-    }
-
-    if (!validTransitions[invoice.status].includes(newStatus)) {
-      return NextResponse.json(
-        { error: `სტატუსის ცვლილება ${invoice.status} → ${newStatus} დაუშვებელია` },
-        { status: 400 }
-      )
-    }
+    // Allow all status transitions (removed restrictions)
+    // Users can now change from any status to any other status
 
     // Prepare update data
     const updateData: { status: string; updated_at: string; paid_at?: string; sent_at?: string } = {

@@ -11,7 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AnalyticsCards } from '@/components/dashboard/analytics-cards'
 import { Charts } from '@/components/dashboard/charts'
 import { RecentActivity } from '@/components/dashboard/recent-activity'
-import { QuickActions } from '@/components/dashboard/quick-actions'
 
 import { useInvoiceStats } from '@/lib/hooks/use-invoices'
 import { useAuth } from '@/lib/hooks/use-auth'
@@ -121,8 +120,6 @@ function DashboardContent() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <QuickActions />
 
       {/* Dashboard Footer Info */}
       <Card>
@@ -246,23 +243,6 @@ function DashboardSkeleton() {
         </div>
       </div>
 
-      {/* Quick Actions Skeleton */}
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-32" />
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="flex flex-col items-center gap-2 p-4">
-                <Skeleton className="h-12 w-12 rounded-lg" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-3 w-16" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Footer Skeleton */}
       <Card>
