@@ -70,10 +70,13 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
         
         setBankAccounts(accounts || [])
         
+        console.log('Loaded bank accounts for invoice:', accounts)
+        
         // Set default bank account if not already set
         const currentBankAccountId = getValues('bank_account_id')
         if (!currentBankAccountId && accounts && accounts.length > 0) {
           const defaultAccount = accounts.find(acc => acc.is_default) || accounts[0]
+          console.log('Setting default bank account:', defaultAccount)
           setValue('bank_account_id', defaultAccount.id)
         }
         

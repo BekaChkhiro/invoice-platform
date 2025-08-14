@@ -50,6 +50,12 @@ export async function GET(
           postal_code,
           contact_person
         ),
+        bank_account:company_bank_accounts(
+          id,
+          bank_name,
+          account_number,
+          account_name
+        ),
         items:invoice_items(
           id,
           description,
@@ -71,16 +77,29 @@ export async function GET(
       )
     }
 
-    // Prepare invoice data with company info
+    // Prepare invoice data with company info  
     const invoiceWithCompany = {
       ...invoice,
-      company
+      company,
+      // Keep bank_account data from the original invoice query
+      bank_account: invoice.bank_account
     }
 
+    // Debug log to check invoice data
+    console.log('Invoice data for PDF:', {
+      id: invoice.id,
+      invoice_number: invoice.invoice_number,
+      bank_account: invoice.bank_account,
+      company: company.name
+    })
+    
     // Call the PDF generation Edge Function
     const { data: pdfResult, error: pdfError } = await supabase.functions.invoke('generate-invoice-pdf', {
       body: {
-        invoice: invoiceWithCompany
+        invoice: {
+          ...invoiceWithCompany,
+          bank_account: invoiceWithCompany.bank_account
+        }
       },
       headers: {
         'Accept': 'application/pdf'

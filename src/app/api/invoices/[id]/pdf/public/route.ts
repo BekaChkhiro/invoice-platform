@@ -44,10 +44,13 @@ export async function GET(
           city,
           postal_code,
           phone,
-          email,
+          email
+        ),
+        bank_account:company_bank_accounts(
+          id,
           bank_name,
-          bank_account,
-          bank_swift
+          account_number,
+          account_name
         ),
         client:clients(
           id,
@@ -91,12 +94,21 @@ export async function GET(
       }
     }
 
+    // Debug log to check invoice data
+    console.log('Public PDF invoice data:', {
+      id: invoice.id,
+      invoice_number: invoice.invoice_number,
+      bank_account: invoice.bank_account,
+      company: invoice.company?.name
+    })
+    
     // Call the PDF generation Edge Function
     const { data: pdfResult, error: pdfError } = await supabase.functions.invoke('generate-invoice-pdf', {
       body: {
         invoice: {
           ...invoice,
-          company: invoice.company
+          company: invoice.company,
+          bank_account: invoice.bank_account
         }
       },
       headers: {

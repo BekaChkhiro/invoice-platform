@@ -54,6 +54,12 @@ export const getInvoiceByPublicToken = async (
           phone,
           email
         ),
+        bank_account:company_bank_accounts(
+          id,
+          bank_name,
+          account_number,
+          account_name
+        ),
         client:clients(
           id,
           name,

@@ -35,6 +35,7 @@ export const invoiceSchema = z.object({
   id: z.string().uuid().optional(),
   company_id: z.string().uuid(),
   client_id: z.string().uuid('კლიენტის არჩევა აუცილებელია'),
+  bank_account_id: z.string().uuid().nullable().optional(),
   invoice_number: z.string().optional(),
   issue_date: z.date().default(() => new Date()),
   due_date: z.date(),

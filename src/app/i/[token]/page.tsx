@@ -137,6 +137,16 @@ export default async function PublicInvoicePage({ params }: { params: { token: s
             )}
             {invoice.company?.phone && <div>ტელ: {invoice.company.phone}</div>}
             {invoice.company?.email && <div>ე-მეილი: {invoice.company.email}</div>}
+            {invoice.bank_account && (
+              <div className="pt-3 border-t space-y-1">
+                <div className="font-medium text-foreground">საბანკო რეკვიზიტები:</div>
+                <div>ბანკი: {invoice.bank_account.bank_name}</div>
+                <div>ანგარიში: {invoice.bank_account.account_number}</div>
+                {invoice.bank_account.account_name && (
+                  <div>მფლობელი: {invoice.bank_account.account_name}</div>
+                )}
+              </div>
+            )}
           </div>
         </div>
         <div className="rounded-lg border bg-background p-4 shadow-sm">

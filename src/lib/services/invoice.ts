@@ -23,6 +23,12 @@ export type InvoiceWithClient = Invoice & {
 
 export type InvoiceWithDetails = InvoiceWithClient & {
   items: InvoiceItem[]
+  bank_account?: {
+    id: string
+    bank_name: string
+    account_number: string
+    account_name?: string | null
+  } | null
 }
 
 export type InvoiceStats = {
@@ -274,6 +280,7 @@ export const createInvoice = async (data: CreateInvoice): Promise<ServiceResult<
       .insert({
         company_id: data.company_id,
         client_id: data.client_id,
+        bank_account_id: data.bank_account_id,
         issue_date: data.issue_date.toISOString().split('T')[0],
         due_date: due_date.toISOString().split('T')[0],
         currency: data.currency,
