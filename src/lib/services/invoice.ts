@@ -197,6 +197,12 @@ export const getInvoice = async (id: string): Promise<ServiceResult<InvoiceWithD
           postal_code,
           tax_id
         ),
+        bank_account:company_bank_accounts(
+          id,
+          bank_name,
+          account_number,
+          account_name
+        ),
         items:invoice_items(
           id,
           description,

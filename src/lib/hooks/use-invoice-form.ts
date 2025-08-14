@@ -25,6 +25,7 @@ const invoiceFormSchema = z.object({
   notes: z.string().max(1000).optional(),
   payment_instructions: z.string().max(1000).optional(),
   items: z.array(invoiceItemSchema).min(1, 'მინიმუმ ერთი პროდუქტი/სერვისი აუცილებელია'),
+  bank_account_id: z.string().nullable().optional(),
   send_immediately: z.boolean().default(false)
 })
 
@@ -85,6 +86,7 @@ export function useInvoiceForm() {
         line_total: 0,
         sort_order: 0
       }],
+      bank_account_id: null,
       send_immediately: false
     },
     mode: 'onChange'
@@ -283,6 +285,7 @@ export function useInvoiceForm() {
           vat_rate: data.vat_rate ?? 18,
           notes: data.notes || '',
           payment_instructions: data.payment_instructions || '',
+          bank_account_id: data.bank_account_id || null,
           send_immediately: data.send_immediately ?? false,
           items: data.items ? data.items.map((item: any, index: number) => ({
             description: item.description || '',

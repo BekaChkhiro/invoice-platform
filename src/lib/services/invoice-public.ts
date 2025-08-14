@@ -87,6 +87,16 @@ export const getInvoiceByPublicToken = async (
       return { data: null, error: 'პუბლიკური ინვოისი ვერ მოიძებნა' }
     }
 
+    // Check if the public link has expired
+    if (data.public_expires_at) {
+      const expiresAt = new Date(data.public_expires_at)
+      const now = new Date()
+      
+      if (now > expiresAt) {
+        return { data: null, error: 'პუბლიკური ლინკის ვადა გადის' }
+      }
+    }
+
     // Ensure items are sorted for display
     if ((data as any).items) {
       ;(data as any).items.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))

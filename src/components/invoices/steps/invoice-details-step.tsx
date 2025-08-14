@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { UseFormReturn } from 'react-hook-form'
-import { Plus, Trash2, Copy, Calendar } from 'lucide-react'
+import { Plus, Trash2, Copy, Calendar, Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,6 +17,8 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Controller } from 'react-hook-form'
 import { format } from 'date-fns'
 import { ka } from 'date-fns/locale'
+import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/use-auth'
 
 import { InvoiceFormData } from '@/lib/hooks/use-invoice-form'
 import { useInvoiceForm } from '@/lib/hooks/use-invoice-form'
@@ -33,6 +35,57 @@ interface InvoiceDetailsStepProps {
 export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
   const { watch, setValue, getValues, formState: { errors } } = form
   const formData = watch()
+  const { user } = useAuth()
+  const supabase = createClient()
+  const [bankAccounts, setBankAccounts] = useState<Array<{ id: string; bank_name: string; account_number: string; account_name?: string | null; is_default: boolean }>>([])  
+  const [loadingBankAccounts, setLoadingBankAccounts] = useState(true)
+  
+  // Load bank accounts
+  useEffect(() => {
+    const loadBankAccounts = async () => {
+      if (!user) return
+      
+      try {
+        setLoadingBankAccounts(true)
+        
+        // First get the company ID
+        const { data: company } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+          
+        if (!company) return
+        
+        // Then get bank accounts
+        const { data: accounts, error } = await supabase
+          .from('company_bank_accounts')
+          .select('id, bank_name, account_number, account_name, is_default')
+          .eq('company_id', company.id)
+          .eq('is_active', true)
+          .order('is_default', { ascending: false })
+          .order('created_at', { ascending: true })
+          
+        if (error) throw error
+        
+        setBankAccounts(accounts || [])
+        
+        // Set default bank account if not already set
+        const currentBankAccountId = getValues('bank_account_id')
+        if (!currentBankAccountId && accounts && accounts.length > 0) {
+          const defaultAccount = accounts.find(acc => acc.is_default) || accounts[0]
+          setValue('bank_account_id', defaultAccount.id)
+        }
+        
+      } catch (error) {
+        console.error('Failed to load bank accounts:', error)
+      } finally {
+        setLoadingBankAccounts(false)
+      }
+    }
+    
+    loadBankAccounts()
+  }, [user, supabase, getValues, setValue])
   
   // Item management functions
   const addItem = () => {
@@ -255,6 +308,68 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
   return (
     <div className="space-y-6">
       {/* Invoice Details */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* Bank Account Selection */}
+        <FormField
+          control={form.control}
+          name="bank_account_id"
+          render={({ field }) => (
+            <FormItem className="col-span-2">
+              <FormLabel>ანგარიშის არჩევა</FormLabel>
+              <Select 
+                value={field.value || ''} 
+                onValueChange={field.onChange}
+                disabled={loadingBankAccounts || bankAccounts.length === 0}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="აირჩიეთ ანგარიში">
+                      {field.value && bankAccounts.length > 0 ? (
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4" />
+                          {(() => {
+                            const account = bankAccounts.find(acc => acc.id === field.value)
+                            return account ? `${account.bank_name} - ${account.account_number}` : 'ანგარიში ვერ მოიძებნა'
+                          })()}
+                        </div>
+                      ) : loadingBankAccounts ? (
+                        "იტვირთება..."
+                      ) : bankAccounts.length === 0 ? (
+                        "ანგარიშები ვერ მოიძებნა"
+                      ) : (
+                        "აირჩიეთ ანგარიში"
+                      )}
+                    </SelectValue>
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {bankAccounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      <div className="flex items-center gap-2 w-full">
+                        <Building2 className="h-4 w-4" />
+                        <div className="flex-1">
+                          <div className="font-medium">{account.bank_name}</div>
+                          <div className="text-sm text-muted-foreground">{account.account_number}</div>
+                        </div>
+                        {account.is_default && (
+                          <Badge variant="secondary" className="ml-2 text-xs">ნაგულისხმევი</Badge>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+              {bankAccounts.length === 0 && !loadingBankAccounts && (
+                <p className="text-sm text-muted-foreground">
+                  ანგარიშების დასამატებლად გადით <a href="/dashboard/settings/company" className="text-primary hover:underline">კომპანიის პარამეტრებში</a>
+                </p>
+              )}
+            </FormItem>
+          )}
+        />
+      </div>
+      
       <div className="grid grid-cols-2 gap-6">
         {/* Issue Date */}
         <FormField

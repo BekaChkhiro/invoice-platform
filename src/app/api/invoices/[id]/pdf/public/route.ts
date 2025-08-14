@@ -81,6 +81,16 @@ export async function GET(
       return NextResponse.json({ error: 'ინვოისი ვერ მოიძებნა' }, { status: 404 })
     }
 
+    // Check if the public link has expired
+    if (invoice.public_expires_at) {
+      const expiresAt = new Date(invoice.public_expires_at)
+      const now = new Date()
+      
+      if (now > expiresAt) {
+        return NextResponse.json({ error: 'პუბლიკური ლინკის ვადა გადის' }, { status: 410 })
+      }
+    }
+
     // Call the PDF generation Edge Function
     const { data: pdfResult, error: pdfError } = await supabase.functions.invoke('generate-invoice-pdf', {
       body: {

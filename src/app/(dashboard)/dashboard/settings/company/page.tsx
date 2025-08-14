@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Loader2, Building2, Upload, AlertCircle } from "lucide-react"
+import { Loader2, Building2, Upload, AlertCircle, Plus, Trash2, Check } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
 const companySchema = z.object({
@@ -37,10 +37,6 @@ const companySchema = z.object({
     z.literal(null),
     z.undefined()
   ]).optional(),
-  // Banking
-  bank_name: z.string().nullable().optional(),
-  bank_account: z.string().nullable().optional(),
-  bank_swift: z.string().nullable().optional(),
   // Invoice settings
   invoice_prefix: z.string().min(1, "პრეფიქსი სავალდებულოა"),
   invoice_notes: z.string().nullable().optional(),
@@ -57,6 +53,10 @@ export default function CompanySettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [company, setCompany] = useState<{ id: string; user_id: string; name: string; logo_url?: string | null; tax_id?: string | null; address_line1?: string | null; address_line2?: string | null; city?: string | null; postal_code?: string | null; phone?: string | null; email?: string | null; website?: string | null; bank_name?: string | null; bank_account?: string | null; bank_swift?: string | null; invoice_prefix: string; invoice_notes?: string | null; payment_terms?: string | null; vat_rate: number } | null>(null)
+  const [bankAccounts, setBankAccounts] = useState<Array<{ id: string; company_id: string; bank_name: string; account_number: string; account_name?: string | null; is_default: boolean; is_active: boolean }>>([])  
+  const [showAddBank, setShowAddBank] = useState(false)
+  const [newBankAccount, setNewBankAccount] = useState({ bank_name: '', account_number: '', account_name: '' })
+  const [isAddingBank, setIsAddingBank] = useState(false)
   const supabase = createClient()
 
 
@@ -96,6 +96,7 @@ export default function CompanySettingsPage() {
     if (data) {
       setCompany(data)
       reset(data)
+      await loadBankAccounts(data.id)
     } else {
       // No company found, create default company
       await createDefaultCompany()
@@ -128,6 +129,7 @@ export default function CompanySettingsPage() {
       if (data) {
         setCompany(data)
         reset(data)
+        await loadBankAccounts(data.id)
         toast({
           title: "კომპანია შეიქმნა",
           description: "ავტომატურად შეიქმნა default კომპანიის ინფორმაცია",
@@ -248,6 +250,142 @@ export default function CompanySettingsPage() {
       })
     } finally {
       setUploadingLogo(false)
+    }
+  }
+
+  const loadBankAccounts = async (companyId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('company_bank_accounts')
+        .select('*')
+        .eq('company_id', companyId)
+        .eq('is_active', true)
+        .order('is_default', { ascending: false })
+        .order('created_at', { ascending: true })
+
+      if (error) throw error
+
+      setBankAccounts(data || [])
+    } catch (error) {
+      console.error('Failed to load bank accounts:', error)
+      toast({
+        title: "შეცდომა",
+        description: "საბანკო ანგარიშების ჩატვირთვა ვერ მოხერხდა",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const addBankAccount = async () => {
+    if (!company) return
+    
+    if (!newBankAccount.bank_name.trim() || !newBankAccount.account_number.trim()) {
+      toast({
+        title: "შეცდომა",
+        description: "ბანკის დასახელება და ანგარიშის ნომერი სავალდებულოა",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsAddingBank(true)
+
+    try {
+      const { error } = await supabase
+        .from('company_bank_accounts')
+        .insert({
+          company_id: company.id,
+          bank_name: newBankAccount.bank_name.trim(),
+          account_number: newBankAccount.account_number.trim(),
+          account_name: newBankAccount.account_name.trim() || null,
+          is_default: bankAccounts.length === 0, // First account becomes default
+          is_active: true,
+        })
+
+      if (error) throw error
+
+      toast({
+        title: "საბანკო ანგარიში დაემატა",
+        description: "ახალი საბანკო ანგარიში წარმატებით შეინახა",
+      })
+
+      setNewBankAccount({ bank_name: '', account_number: '', account_name: '' })
+      setShowAddBank(false)
+      await loadBankAccounts(company.id)
+    } catch (error) {
+      console.error('Failed to add bank account:', error)
+      toast({
+        title: "შეცდომა",
+        description: "საბანკო ანგარიშის დამატება ვერ მოხერხდა",
+        variant: "destructive",
+      })
+    } finally {
+      setIsAddingBank(false)
+    }
+  }
+
+  const setDefaultBankAccount = async (bankAccountId: string) => {
+    if (!company) return
+
+    try {
+      const { error } = await supabase
+        .from('company_bank_accounts')
+        .update({ is_default: true })
+        .eq('id', bankAccountId)
+        .eq('company_id', company.id)
+
+      if (error) throw error
+
+      toast({
+        title: "ნაგულისხმევი ანგარიში შეიცვალა",
+        description: "ანგარიში ნაგულისხმევად დაყენდა",
+      })
+
+      await loadBankAccounts(company.id)
+    } catch (error) {
+      console.error('Failed to set default bank account:', error)
+      toast({
+        title: "შეცდომა",
+        description: "ნაგულისხმევი ანგარიშის დაყენება ვერ მოხერხდა",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const deleteBankAccount = async (bankAccountId: string, isDefault: boolean) => {
+    if (!company) return
+
+    if (isDefault && bankAccounts.length > 1) {
+      toast({
+        title: "შეცდომა",
+        description: "ნაგულისხმევი ანგარიშის წაშლა შეუძლებელია. ჯერ სხვა ანგარიში გახადეთ ნაგულისხმევი.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('company_bank_accounts')
+        .update({ is_active: false })
+        .eq('id', bankAccountId)
+        .eq('company_id', company.id)
+
+      if (error) throw error
+
+      toast({
+        title: "საბანკო ანგარიში წაიშალა",
+        description: "ანგარიში წარმატებით წაიშალა",
+      })
+
+      await loadBankAccounts(company.id)
+    } catch (error) {
+      console.error('Failed to delete bank account:', error)
+      toast({
+        title: "შეცდომა",
+        description: "საბანკო ანგარიშის წაშლა ვერ მოხერხდა",
+        variant: "destructive",
+      })
     }
   }
 
@@ -497,40 +635,151 @@ export default function CompanySettingsPage() {
           <TabsContent value="banking" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>საბანკო რეკვიზიტები</CardTitle>
-                <CardDescription>
-                  თქვენი საბანკო ინფორმაცია ინვოისებისთვის
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>საბანკო ანგარიშები</CardTitle>
+                    <CardDescription>
+                      მართეთ თქვენი კომპანიის საბანკო ანგარიშები. ანგარიშები გამოჩნდება ინვოისებზე.
+                    </CardDescription>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => setShowAddBank(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    ახალი ანგარიში
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="bank_name">ბანკის დასახელება</Label>
-                    <Input
-                      id="bank_name"
-                      {...register("bank_name")}
-                      disabled={isLoading}
-                    />
+                {/* Add New Bank Account Form */}
+                {showAddBank && (
+                  <div className="border rounded-lg p-4 bg-gray-50">
+                    <h4 className="font-medium mb-4">ახალი საბანკო ანგარიშის დამატება</h4>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="new_bank_name">ბანკის დასახელება *</Label>
+                        <Input
+                          id="new_bank_name"
+                          value={newBankAccount.bank_name}
+                          onChange={(e) => setNewBankAccount(prev => ({ ...prev, bank_name: e.target.value }))}
+                          placeholder="მაგ: საქართველოს ბანკი"
+                          disabled={isAddingBank}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new_account_name">ანგარიშის მფლობელი</Label>
+                        <Input
+                          id="new_account_name"
+                          value={newBankAccount.account_name}
+                          onChange={(e) => setNewBankAccount(prev => ({ ...prev, account_name: e.target.value }))}
+                          placeholder="კომპანიის დასახელება"
+                          disabled={isAddingBank}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="new_account_number">ანგარიშის ნომერი (IBAN) *</Label>
+                        <Input
+                          id="new_account_number"
+                          value={newBankAccount.account_number}
+                          onChange={(e) => setNewBankAccount(prev => ({ ...prev, account_number: e.target.value }))}
+                          placeholder="GE00XX000000000000000"
+                          disabled={isAddingBank}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2 mt-4">
+                      <Button
+                        type="button"
+                        onClick={addBankAccount}
+                        disabled={isAddingBank}
+                      >
+                        {isAddingBank ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            შენახვა...
+                          </>
+                        ) : (
+                          "დამატება"
+                        )}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setShowAddBank(false)
+                          setNewBankAccount({ bank_name: '', account_number: '', account_name: '' })
+                        }}
+                        disabled={isAddingBank}
+                      >
+                        გაუქმება
+                      </Button>
+                    </div>
                   </div>
+                )}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="bank_account">ანგარიშის ნომერი (IBAN)</Label>
-                    <Input
-                      id="bank_account"
-                      {...register("bank_account")}
-                      disabled={isLoading}
-                      placeholder="GE00XX000000000000000"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="bank_swift">SWIFT კოდი</Label>
-                    <Input
-                      id="bank_swift"
-                      {...register("bank_swift")}
-                      disabled={isLoading}
-                    />
-                  </div>
+                {/* Bank Accounts List */}
+                <div className="space-y-3">
+                  {bankAccounts.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>საბანკო ანგარიშები არ არის დამატებული</p>
+                      <p className="text-sm">დაამატეთ ანგარიში ინვოისებზე გამოსაჩენად</p>
+                    </div>
+                  ) : (
+                    bankAccounts.map((account) => (
+                      <div
+                        key={account.id}
+                        className={`border rounded-lg p-4 ${account.is_default ? 'border-blue-200 bg-blue-50' : 'border-gray-200'}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-medium">{account.bank_name}</h4>
+                              {account.is_default && (
+                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">
+                                  <Check className="h-3 w-3" />
+                                  ნაგულისხმევი
+                                </span>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
+                              <div>
+                                <span className="font-medium">IBAN:</span> {account.account_number}
+                              </div>
+                              {account.account_name && (
+                                <div>
+                                  <span className="font-medium">მფლობელი:</span> {account.account_name}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2 ml-4">
+                            {!account.is_default && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setDefaultBankAccount(account.id)}
+                              >
+                                ნაგულისხმევი გახადე
+                              </Button>
+                            )}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => deleteBankAccount(account.id, account.is_default)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>

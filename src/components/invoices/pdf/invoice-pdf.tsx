@@ -213,6 +213,11 @@ const styles = StyleSheet.create({
     lineHeight: 1.4
   },
   
+  bankInfo: {
+    marginTop: 5,
+    paddingLeft: 10
+  },
+  
   // Status Badge
   statusBadge: {
     position: 'absolute',
@@ -415,6 +420,26 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
 
         {/* Footer */}
         <View style={styles.footer}>
+          
+          {/* Bank Account Information */}
+          {invoice.bank_account && (
+            <View style={styles.footerSection}>
+              <Text style={styles.footerTitle}>საბანკო რეკვიზიტები:</Text>
+              <View style={styles.bankInfo}>
+                <Text style={styles.footerText}>
+                  ბანკი: {invoice.bank_account.bank_name}
+                </Text>
+                <Text style={styles.footerText}>
+                  ანგარიში: {invoice.bank_account.account_number}
+                </Text>
+                {invoice.bank_account.account_name && (
+                  <Text style={styles.footerText}>
+                    მფლობელი: {invoice.bank_account.account_name}
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
           
           {/* Payment Instructions */}
           {invoice.payment_instructions && (

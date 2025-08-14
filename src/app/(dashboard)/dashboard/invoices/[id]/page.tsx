@@ -687,6 +687,34 @@ export default function InvoiceDetailPage() {
             </CardContent>
           </Card>
 
+          {/* Bank Account Information */}
+          {invoice.bank_account && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-5 w-5" />
+                  საბანკო რეკვიზიტები
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">ბანკი:</span>
+                  <span className="font-medium">{invoice.bank_account.bank_name}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">ანგარიში:</span>
+                  <span className="font-medium font-mono">{invoice.bank_account.account_number}</span>
+                </div>
+                {invoice.bank_account.account_name && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">მფლობელი:</span>
+                    <span className="font-medium">{invoice.bank_account.account_name}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Notes */}
           {invoice.notes && (
             <Card>
