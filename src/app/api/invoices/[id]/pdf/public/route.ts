@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { createHash } from 'crypto'
+import { createClient } from '@supabase/supabase-js'
 
 export async function GET(
   request: NextRequest,
@@ -10,24 +9,34 @@ export async function GET(
     const { id } = await params
     const { searchParams } = new URL(request.url)
     const token = searchParams.get('token')
-    
+
     if (!token) {
-      return NextResponse.json(
-        { error: 'აუცილებელია ტოკენი' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'აუცილებელია ტოკენი' }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    // Use service role client to bypass RLS for public invoices
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
     
-    // Get invoice with company info to verify token
+    if (!supabaseServiceKey) {
+      console.error('SUPABASE_SERVICE_ROLE_KEY is not set in environment variables')
+      return NextResponse.json({ error: 'სერვისი დროებით მიუწვდომელია' }, { status: 500 })
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    })
+
+    // Fetch invoice by public token (must be enabled)
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .select(`
         *,
-        company:companies!inner(
+        company:companies(
           id,
-          user_id,
           name,
           tax_id,
           address_line1,
@@ -37,9 +46,10 @@ export async function GET(
           phone,
           email,
           bank_name,
-          bank_account_number
+          bank_account,
+          bank_swift
         ),
-        client:clients!inner(
+        client:clients(
           id,
           name,
           type,
@@ -62,27 +72,13 @@ export async function GET(
         )
       `)
       .eq('id', id)
+      .eq('public_enabled', true)
+      .eq('public_token', token)
       .order('sort_order', { foreignTable: 'invoice_items', ascending: true })
-      .single()
+      .maybeSingle()
 
     if (invoiceError || !invoice) {
-      return NextResponse.json(
-        { error: 'ინვოისი ვერ მოიძებნა' },
-        { status: 404 }
-      )
-    }
-
-    // Verify token - create the same hash that should be used to generate the token
-    const expectedToken = createHash('sha256')
-      .update(`${invoice.id}-${invoice.company.user_id}-${process.env.SUPABASE_JWT_SECRET}`)
-      .digest('hex')
-      .substring(0, 32)
-
-    if (token !== expectedToken) {
-      return NextResponse.json(
-        { error: 'არასწორი ტოკენი' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: 'ინვოისი ვერ მოიძებნა' }, { status: 404 })
     }
 
     // Call the PDF generation Edge Function
@@ -126,7 +122,7 @@ export async function GET(
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
         'Expires': '0',
-        'X-Robots-Tag': 'noindex, nofollow' // Prevent search engine indexing
+        'X-Robots-Tag': 'noindex, nofollow'
       }
     })
 

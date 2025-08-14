@@ -14,8 +14,13 @@ import { useClientList } from '@/lib/hooks/use-clients'
 import { ClientStatsCards } from '@/components/clients/client-stats-cards'
 import { ClientFilters } from '@/components/clients/client-filters'
 import { ClientTable } from '@/components/clients/client-table'
+import { AnalyticsCards } from '@/components/dashboard/analytics-cards'
+import { useInvoiceStats } from '@/lib/hooks/use-invoices'
+import { useAuth } from '@/lib/hooks/use-auth'
 
 export default function ClientsPage() {
+  const { company } = useAuth()
+  
   const {
     // Data
     clients,
@@ -53,6 +58,12 @@ export default function ClientsPage() {
     refetch,
     exportClients
   } = useClientList()
+
+  // Fetch invoice stats for analytics
+  const { 
+    data: invoiceStats, 
+    isLoading: analyticsLoading 
+  } = useInvoiceStats(company?.id || '')
 
   const [isRefreshing, setIsRefreshing] = useState(false)
 
@@ -185,6 +196,19 @@ export default function ClientsPage() {
 
       {/* Statistics Cards */}
       <ClientStatsCards stats={stats} isLoading={statsLoading} />
+
+      {/* Analytics Cards */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">ბიზნეს ანალიტიკა</h2>
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/dashboard/analytics">
+              ყველა რეპორტი →
+            </Link>
+          </Button>
+        </div>
+        <AnalyticsCards stats={invoiceStats} loading={analyticsLoading} />
+      </div>
 
       {/* Bulk Actions */}
       {hasSelection && (

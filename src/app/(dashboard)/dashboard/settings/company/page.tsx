@@ -86,7 +86,7 @@ export default function CompanySettingsPage() {
       .from("companies")
       .select("*")
       .eq("user_id", user.id)
-      .single()
+      .maybeSingle()
 
     if (error) {
       console.error('Failed to load company:', error)
@@ -96,6 +96,50 @@ export default function CompanySettingsPage() {
     if (data) {
       setCompany(data)
       reset(data)
+    } else {
+      // No company found, create default company
+      await createDefaultCompany()
+    }
+  }
+
+  const createDefaultCompany = async () => {
+    if (!user) return
+
+    try {
+      const { data, error } = await supabase
+        .from("companies")
+        .insert({
+          user_id: user.id,
+          name: "ჩემი კომპანია",
+          invoice_prefix: "INV",
+          invoice_counter: 1,
+          vat_rate: 18,
+          currency: "₾",
+          default_currency: "GEL",
+          default_vat_rate: 18,
+          default_payment_terms: 14,
+          default_due_days: 14,
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      if (data) {
+        setCompany(data)
+        reset(data)
+        toast({
+          title: "კომპანია შეიქმნა",
+          description: "ავტომატურად შეიქმნა default კომპანიის ინფორმაცია",
+        })
+      }
+    } catch (error) {
+      console.error('Failed to create default company:', error)
+      toast({
+        title: "შეცდომა",
+        description: "კომპანიის შექმნა ვერ მოხერხდა",
+        variant: "destructive",
+      })
     }
   }
 

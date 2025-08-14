@@ -21,6 +21,7 @@ import {
   AlertCircle,
   Send
 } from 'lucide-react'
+import { Link as LinkIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { ka } from 'date-fns/locale'
 
@@ -70,6 +71,21 @@ interface InvoiceWithItems extends Invoice {
   client?: Client
 }
 
+// Safe date formatter to avoid RangeError on invalid dates
+const formatSafe = (
+  value: string | Date | null | undefined,
+  pattern: string
+) => {
+  if (!value) return '-'
+  const d = typeof value === 'string' ? new Date(value) : value
+  if (!(d instanceof Date) || isNaN(d.getTime())) return '-'
+  try {
+    return format(d, pattern, { locale: ka })
+  } catch {
+    return '-'
+  }
+}
+
 export default function InvoiceDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -81,6 +97,7 @@ export default function InvoiceDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
+  const [publicLink, setPublicLink] = useState<string>('')
 
   // Enable real-time updates for this specific invoice
   useInvoiceRealtimeDetail(invoiceId)
@@ -291,6 +308,54 @@ export default function InvoiceDetailPage() {
     }
   }
 
+  // Enable or rotate and copy public link
+  const handleCopyPublicLink = async () => {
+    if (!invoice) return
+    try {
+      setActionLoading(true)
+      const res = await fetch(`/api/invoices/${invoice.id}/public-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rotate: true })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Public ლინკის შექმნა ვერ მოხერხდა')
+      const url = data.url as string
+      setPublicLink(url)
+      await navigator.clipboard.writeText(url)
+      toast({ title: 'ლინკი შექმნილია', description: 'ლინკი დაკოპირდა ბუფერში' })
+    } catch (error) {
+      toast({
+        title: 'შეცდომა',
+        description: error instanceof Error ? error.message : 'Public ლინკის შექმნა ვერ მოხერხდა',
+        variant: 'destructive'
+      })
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  // Disable public link
+  const handleDisablePublicLink = async () => {
+    if (!invoice) return
+    try {
+      setActionLoading(true)
+      const res = await fetch(`/api/invoices/${invoice.id}/public-link`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Public ლინკის გამორთვა ვერ მოხერხდა')
+      setPublicLink('')
+      toast({ title: 'ლინკი გამორთულია' })
+    } catch (error) {
+      toast({
+        title: 'შეცდომა',
+        description: error instanceof Error ? error.message : 'Public ლინკის გამორთვა ვერ მოხერხდა',
+        variant: 'destructive'
+      })
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   // Status badge color and icon
   const getStatusInfo = (status: string) => {
     switch (status) {
@@ -401,11 +466,11 @@ export default function InvoiceDetailPage() {
             <div className="text-sm text-muted-foreground space-y-1">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                გამოცემის თარიღი: {format(new Date(invoice.issue_date), 'dd MMM yyyy', { locale: ka })}
+                გამოცემის თარიღი: {formatSafe(invoice.issue_date as any, 'dd MMM yyyy')}
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                ვადა: {format(new Date(invoice.due_date), 'dd MMM yyyy', { locale: ka })}
+                ვადა: {formatSafe(invoice.due_date as any, 'dd MMM yyyy')}
               </div>
             </div>
           </div>
@@ -440,6 +505,15 @@ export default function InvoiceDetailPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleCopyPublicLink} disabled={actionLoading}>
+                <LinkIcon className="w-4 h-4 mr-2" />
+                Public ლინკის კოპირება
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDisablePublicLink} disabled={actionLoading}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Public ლინკის გამორთვა
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href={`/dashboard/invoices/new?edit=${invoice.id}`}>
                   <Edit className="w-4 h-4 mr-2" />
@@ -693,7 +767,7 @@ export default function InvoiceDetailPage() {
                   <div className="text-sm">
                     <div className="font-medium">ინვოისი შეიქმნა</div>
                     <div className="text-muted-foreground">
-                      {format(new Date(invoice.created_at), 'dd MMM yyyy, HH:mm', { locale: ka })}
+                      {formatSafe(invoice.created_at as any, 'dd MMM yyyy, HH:mm')}
                     </div>
                   </div>
                 </div>
@@ -704,7 +778,7 @@ export default function InvoiceDetailPage() {
                     <div className="text-sm">
                       <div className="font-medium">ინვოისი გაიგზავნა</div>
                       <div className="text-muted-foreground">
-                        {format(new Date(invoice.sent_at || ''), 'dd MMM yyyy, HH:mm', { locale: ka })}
+                        {formatSafe(invoice.sent_at as any, 'dd MMM yyyy, HH:mm')}
                       </div>
                     </div>
                   </div>
@@ -716,7 +790,7 @@ export default function InvoiceDetailPage() {
                     <div className="text-sm">
                       <div className="font-medium">ინვოისი გადაიხადა</div>
                       <div className="text-muted-foreground">
-                        {format(new Date(invoice.paid_at), 'dd MMM yyyy, HH:mm', { locale: ka })}
+                        {formatSafe(invoice.paid_at as any, 'dd MMM yyyy, HH:mm')}
                       </div>
                     </div>
                   </div>
