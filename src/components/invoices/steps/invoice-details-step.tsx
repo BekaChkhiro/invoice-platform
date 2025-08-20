@@ -73,11 +73,11 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
         console.log('Loaded bank accounts for invoice:', accounts)
         
         // Set default bank account if not already set
-        const currentBankAccountId = getValues('bank_account_id')
-        if (!currentBankAccountId && accounts && accounts.length > 0) {
+        const currentBankAccountIds = getValues('bank_account_ids')
+        if ((!currentBankAccountIds || currentBankAccountIds.length === 0) && accounts && accounts.length > 0) {
           const defaultAccount = accounts.find(acc => acc.is_default) || accounts[0]
           console.log('Setting default bank account:', defaultAccount)
-          setValue('bank_account_id', defaultAccount.id)
+          setValue('bank_account_ids', [defaultAccount.id])
         }
         
       } catch (error) {
@@ -312,61 +312,66 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
     <div className="space-y-6">
       {/* Invoice Details */}
       <div className="grid grid-cols-2 gap-6">
-        {/* Bank Account Selection */}
+        {/* Bank Accounts Selection (Multi-select) */}
         <FormField
           control={form.control}
-          name="bank_account_id"
+          name="bank_account_ids"
           render={({ field }) => (
             <FormItem className="col-span-2">
-              <FormLabel>ანგარიშის არჩევა</FormLabel>
-              <Select 
-                value={field.value || ''} 
-                onValueChange={field.onChange}
-                disabled={loadingBankAccounts || bankAccounts.length === 0}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="აირჩიეთ ანგარიში">
-                      {field.value && bankAccounts.length > 0 ? (
-                        <div className="flex items-center gap-2">
+              <FormLabel>ანგარიშების არჩევა (შეგიძლიათ აირჩიოთ რამდენიმე)</FormLabel>
+              <FormControl>
+                <div className="space-y-2">
+                  {loadingBankAccounts ? (
+                    <div className="text-sm text-muted-foreground">იტვირთება...</div>
+                  ) : bankAccounts.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">ანგარიშები ვერ მოიძებნა</div>
+                  ) : (
+                    bankAccounts.map((account) => (
+                      <div key={account.id} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={`account-${account.id}`}
+                          checked={(field.value || []).includes(account.id)}
+                          onChange={(e) => {
+                            const currentIds = field.value || []
+                            if (e.target.checked) {
+                              field.onChange([...currentIds, account.id])
+                            } else {
+                              field.onChange(currentIds.filter((id: string) => id !== account.id))
+                            }
+                          }}
+                          className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                        />
+                        <label 
+                          htmlFor={`account-${account.id}`}
+                          className="flex items-center gap-2 text-sm font-medium cursor-pointer flex-1"
+                        >
                           <Building2 className="h-4 w-4" />
-                          {(() => {
-                            const account = bankAccounts.find(acc => acc.id === field.value)
-                            return account ? `${account.bank_name} - ${account.account_number}` : 'ანგარიში ვერ მოიძებნა'
-                          })()}
-                        </div>
-                      ) : loadingBankAccounts ? (
-                        "იტვირთება..."
-                      ) : bankAccounts.length === 0 ? (
-                        "ანგარიშები ვერ მოიძებნა"
-                      ) : (
-                        "აირჩიეთ ანგარიში"
-                      )}
-                    </SelectValue>
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {bankAccounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      <div className="flex items-center gap-2 w-full">
-                        <Building2 className="h-4 w-4" />
-                        <div className="flex-1">
-                          <div className="font-medium">{account.bank_name}</div>
-                          <div className="text-sm text-muted-foreground">{account.account_number}</div>
-                        </div>
-                        {account.is_default && (
-                          <Badge variant="secondary" className="ml-2 text-xs">ნაგულისხმევი</Badge>
-                        )}
+                          <div className="flex-1">
+                            <div className="font-medium">{account.bank_name}</div>
+                            <div className="text-xs text-muted-foreground">{account.account_number}</div>
+                          </div>
+                          {account.is_default && (
+                            <Badge variant="secondary" className="ml-2 text-xs">ნაგულისხმევი</Badge>
+                          )}
+                        </label>
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    ))
+                  )}
+                </div>
+              </FormControl>
               <FormMessage />
               {bankAccounts.length === 0 && !loadingBankAccounts && (
                 <p className="text-sm text-muted-foreground">
                   ანგარიშების დასამატებლად გადით <a href="/dashboard/settings/company" className="text-primary hover:underline">კომპანიის პარამეტრებში</a>
                 </p>
+              )}
+              {field.value && field.value.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm text-muted-foreground">
+                    არჩეული ანგარიშები: {field.value.length}
+                  </p>
+                </div>
               )}
             </FormItem>
           )}

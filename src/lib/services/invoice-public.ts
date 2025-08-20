@@ -14,6 +14,13 @@ export type PublicInvoice = InvoiceWithDetails & {
     phone: string | null
     email: string | null
   } | null
+  bank_accounts?: Array<{
+    id: string
+    bank_name: string
+    account_number: string
+    account_name?: string | null
+    is_default?: boolean
+  }>
 }
 
 // Public invoice service (server-side only)
@@ -60,18 +67,6 @@ export const getInvoiceByPublicToken = async (
           account_number,
           account_name
         ),
-        client:clients(
-          id,
-          name,
-          email,
-          type,
-          phone,
-          address_line1,
-          address_line2,
-          city,
-          postal_code,
-          tax_id
-        ),
         items:invoice_items(
           id,
           description,
@@ -93,9 +88,57 @@ export const getInvoiceByPublicToken = async (
       return { data: null, error: 'პუბლიკური ინვოისი ვერ მოიძებნა' }
     }
 
+    // Extract selected bank account IDs from notes field
+    let bankAccounts = null
+    let selectedBankAccountIds: string[] = []
+    
+    // Try to parse selected bank accounts from notes field
+    if (data.notes) {
+      try {
+        const notesData = JSON.parse(data.notes)
+        if (notesData.selected_bank_account_ids && Array.isArray(notesData.selected_bank_account_ids)) {
+          selectedBankAccountIds = notesData.selected_bank_account_ids
+        }
+      } catch (error) {
+        console.error('Error parsing notes field:', error)
+      }
+    }
+    
+    // Fetch selected bank accounts if we have IDs
+    if (selectedBankAccountIds.length > 0 && data.company_id) {
+      const { data: selectedBankAccounts } = await supabase
+        .from('company_bank_accounts')
+        .select(`
+          id,
+          bank_name,
+          account_number,
+          account_name,
+          is_default
+        `)
+        .in('id', selectedBankAccountIds)
+        .eq('company_id', data.company_id)
+        .eq('is_active', true)
+        .order('is_default', { ascending: false })
+
+      bankAccounts = selectedBankAccounts || []
+    }
+
+    // Fallback to single bank account if no selected accounts
+    if (!bankAccounts || bankAccounts.length === 0) {
+      if (data.bank_account) {
+        bankAccounts = [data.bank_account]
+      }
+    }
+
+    // Add bank_accounts to the response
+    const invoiceWithBankAccounts = {
+      ...data,
+      bank_accounts: bankAccounts
+    }
+
     // Check if the public link has expired
-    if (data.public_expires_at) {
-      const expiresAt = new Date(data.public_expires_at)
+    if (invoiceWithBankAccounts.public_expires_at) {
+      const expiresAt = new Date(invoiceWithBankAccounts.public_expires_at)
       const now = new Date()
       
       if (now > expiresAt) {
@@ -104,11 +147,11 @@ export const getInvoiceByPublicToken = async (
     }
 
     // Ensure items are sorted for display
-    if ((data as any).items) {
-      ;(data as any).items.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
+    if (invoiceWithBankAccounts.items) {
+      invoiceWithBankAccounts.items.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0))
     }
 
-    return { data: data as PublicInvoice, error: null }
+    return { data: invoiceWithBankAccounts as PublicInvoice, error: null }
   } catch (e: any) {
     return { data: null, error: e?.message || 'პუბლიკური ინვოისის წაკითხვა ვერ მოხერხდა' }
   }

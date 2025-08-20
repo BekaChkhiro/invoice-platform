@@ -77,6 +77,48 @@ export async function GET(
       )
     }
 
+    // Extract selected bank account IDs from notes field
+    let bankAccounts = null
+    let selectedBankAccountIds: string[] = []
+    
+    // Try to parse selected bank accounts from notes field
+    if ((invoice as any).notes) {
+      try {
+        const notesData = JSON.parse((invoice as any).notes)
+        if (notesData.selected_bank_account_ids && Array.isArray(notesData.selected_bank_account_ids)) {
+          selectedBankAccountIds = notesData.selected_bank_account_ids
+        }
+      } catch (error) {
+        console.error('Error parsing notes field:', error)
+      }
+    }
+    
+    // Fetch selected bank accounts if we have IDs
+    if (selectedBankAccountIds.length > 0 && company.id) {
+      const { data: selectedBankAccounts } = await supabase
+        .from('company_bank_accounts')
+        .select(`
+          id,
+          bank_name,
+          account_number,
+          account_name,
+          is_default
+        `)
+        .in('id', selectedBankAccountIds)
+        .eq('company_id', company.id)
+        .eq('is_active', true)
+        .order('is_default', { ascending: false })
+
+      bankAccounts = selectedBankAccounts || []
+    }
+
+    // Fallback to single bank account if no company accounts
+    if (!bankAccounts || bankAccounts.length === 0) {
+      if (invoice.bank_account) {
+        bankAccounts = [invoice.bank_account]
+      }
+    }
+
     // Prepare invoice data with company info  
     const invoiceWithCompany = {
       ...invoice,
@@ -90,6 +132,8 @@ export async function GET(
       id: invoice.id,
       invoice_number: invoice.invoice_number,
       bank_account: invoice.bank_account,
+      bank_accounts: bankAccounts,
+      notes: (invoice as any).notes,
       company: company.name
     })
     
@@ -98,7 +142,8 @@ export async function GET(
       body: {
         invoice: {
           ...invoiceWithCompany,
-          bank_account: invoiceWithCompany.bank_account
+          bank_account: invoiceWithCompany.bank_account,
+          bank_accounts: bankAccounts
         }
       },
       headers: {

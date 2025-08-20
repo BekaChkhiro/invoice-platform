@@ -13,15 +13,6 @@ export const clientSchema = z.object({
   contact_person: z.string().optional(),
   notes: z.string().optional(),
   is_active: z.boolean().default(true),
-}).refine((data) => {
-  // Company type requires tax_id
-  if (data.type === 'company' && !data.tax_id) {
-    return false
-  }
-  return true
-}, {
-  message: "იურიდიული პირისთვის საიდენტიფიკაციო კოდი სავალდებულოა",
-  path: ["tax_id"],
 })
 
 export type ClientFormData = z.infer<typeof clientSchema>

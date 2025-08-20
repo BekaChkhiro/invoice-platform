@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
     // Parse request body
     const body = await request.json()
     console.log('Request body:', JSON.stringify(body, null, 2))
-    const { due_days, items, send_immediately, ...invoiceData } = body
+    const { due_days, items, send_immediately, bank_account_ids, ...invoiceData } = body
 
     // Validate required fields
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -213,8 +213,17 @@ export async function POST(request: NextRequest) {
       invoiceData.due_date = dueDate
     }
 
-    // Set company_id
+    // Set company_id and bank_account_id (use first selected account for now)
     invoiceData.company_id = company.id
+    if (bank_account_ids && Array.isArray(bank_account_ids) && bank_account_ids.length > 0) {
+      invoiceData.bank_account_id = bank_account_ids[0]
+      // Store selected bank account IDs in notes field as a workaround
+      const selectedBankData = {
+        selected_bank_account_ids: bank_account_ids,
+        user_notes: invoiceData.notes || ''
+      }
+      invoiceData.notes = JSON.stringify(selectedBankData)
+    }
 
     // Calculate totals
     const subtotal = items.reduce((sum: number, item: { quantity: number; unit_price: number }) => {
@@ -357,6 +366,10 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Unexpected error in POST /api/invoices:', error)
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : 'No stack trace'
+    })
     return NextResponse.json(
       { error: 'მოხდა შეცდომა' },
       { status: 500 }

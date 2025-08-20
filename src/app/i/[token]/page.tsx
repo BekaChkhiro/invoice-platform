@@ -123,10 +123,11 @@ export default async function PublicInvoicePage({ params }: { params: { token: s
       </div>
 
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <div className="rounded-lg border bg-background p-4 shadow-sm">
-          <h2 className="font-medium mb-2">{invoice.company?.name || 'კომპანია'}</h2>
-          <div className="text-sm space-y-1 text-muted-foreground">
+      <div className="mt-6">
+        <div className="rounded-lg border bg-background p-6 shadow-sm">
+          <h2 className="text-lg font-semibold mb-4">{invoice.company?.name || 'კომპანია'}</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-2 text-sm text-muted-foreground">
             {invoice.company?.tax_id && (
               <div>საიდენტიფიკაციო კოდი: {invoice.company.tax_id}</div>
             )}
@@ -135,43 +136,48 @@ export default async function PublicInvoicePage({ params }: { params: { token: s
                 მისამართი: {[invoice.company?.address_line1, invoice.company?.city].filter(Boolean).join(', ')}{invoice.company?.postal_code ? ', ' + invoice.company.postal_code : ''}
               </div>
             )}
-            {invoice.company?.phone && <div>ტელ: {invoice.company.phone}</div>}
-            {invoice.company?.email && <div>ე-მეილი: {invoice.company.email}</div>}
-            {invoice.bank_account && (
-              <div className="pt-3 border-t space-y-1">
-                <div className="font-medium text-foreground">საბანკო რეკვიზიტები:</div>
-                <div>ბანკი: {invoice.bank_account.bank_name}</div>
-                <div>ანგარიში: {invoice.bank_account.account_number}</div>
-                {invoice.bank_account.account_name && (
-                  <div>მფლობელი: {invoice.bank_account.account_name}</div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="rounded-lg border bg-background p-4 shadow-sm">
-          <h2 className="font-medium mb-2">გადამხდელი</h2>
-          <div className="text-sm space-y-1">
-            <div className="font-semibold text-foreground">{invoice.client?.name || 'კლიენტი'}</div>
-            {invoice.client?.type && (
-              <div className="text-muted-foreground">ტიპი: {invoice.client.type === 'individual' ? 'ფიზიკური პირი' : 'იურიდიული პირი'}</div>
-            )}
-            {invoice.client?.email && (
-              <div className="text-muted-foreground">ელ.ფოსტა: {invoice.client.email}</div>
-            )}
-            {invoice.client?.tax_id && (
-              <div className="text-muted-foreground">{invoice.client?.type === 'individual' ? 'პირადი ნომერი' : 'საიდ. კოდი'}: {invoice.client.tax_id}</div>
-            )}
-            {invoice.client?.phone && (
-              <div className="text-muted-foreground">ტელ: {invoice.client.phone}</div>
-            )}
-            {(invoice.client?.address_line1 || invoice.client?.address_line2 || invoice.client?.city || invoice.client?.postal_code) && (
-              <div className="text-muted-foreground">
-                {(invoice.client?.address_line1 || '') + (invoice.client?.address_line2 ? ', ' + invoice.client.address_line2 : '')}
-                {(invoice.client?.city ? ', ' + invoice.client.city : '')}
-                {(invoice.client?.postal_code ? ' ' + invoice.client.postal_code : '')}
-              </div>
-            )}
+              {invoice.company?.phone && <div>ტელ: {invoice.company.phone}</div>}
+              {invoice.company?.email && <div>ე-მეილი: {invoice.company.email}</div>}
+            </div>
+            
+            {/* საბანკო რეკვიზიტები მეორე კოლუმნში */}
+            <div className="space-y-2 text-sm">
+              {((invoice.bank_accounts && invoice.bank_accounts.length > 0) || invoice.bank_account) && (
+                <div className="space-y-2">
+                  <div className="font-medium text-foreground">
+                    საბანკო რეკვიზიტები:
+                  </div>
+                  {invoice.bank_accounts && invoice.bank_accounts.length > 0 ? (
+                    <div className="space-y-4">
+                      {invoice.bank_accounts.map((account, index) => (
+                        <div key={account.id} className={`p-3 bg-gray-50 rounded-md space-y-1`}>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">ბანკი: {account.bank_name}</span>
+                            {account.is_default && (
+                              <span className="inline-flex items-center rounded px-1.5 py-0.5 text-xs bg-primary/10 text-primary">
+                                მთავარი
+                              </span>
+                            )}
+                          </div>
+                          <div>ანგარიში: {account.account_number}</div>
+                          {account.account_name && (
+                            <div>მფლობელი: {account.account_name}</div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : invoice.bank_account ? (
+                    <div className="p-3 bg-gray-50 rounded-md space-y-1">
+                      <div className="font-medium">ბანკი: {invoice.bank_account.bank_name}</div>
+                      <div>ანგარიში: {invoice.bank_account.account_number}</div>
+                      {invoice.bank_account.account_name && (
+                        <div>მფლობელი: {invoice.bank_account.account_name}</div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

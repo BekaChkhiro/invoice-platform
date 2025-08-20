@@ -52,19 +52,6 @@ export async function GET(
           account_number,
           account_name
         ),
-        client:clients(
-          id,
-          name,
-          type,
-          tax_id,
-          email,
-          phone,
-          address_line1,
-          address_line2,
-          city,
-          postal_code,
-          contact_person
-        ),
         items:invoice_items(
           id,
           description,
@@ -84,6 +71,48 @@ export async function GET(
       return NextResponse.json({ error: 'ინვოისი ვერ მოიძებნა' }, { status: 404 })
     }
 
+    // Extract selected bank account IDs from notes field
+    let bankAccounts = null
+    let selectedBankAccountIds: string[] = []
+    
+    // Try to parse selected bank accounts from notes field
+    if (invoice.notes) {
+      try {
+        const notesData = JSON.parse(invoice.notes)
+        if (notesData.selected_bank_account_ids && Array.isArray(notesData.selected_bank_account_ids)) {
+          selectedBankAccountIds = notesData.selected_bank_account_ids
+        }
+      } catch (error) {
+        console.error('Error parsing notes field:', error)
+      }
+    }
+    
+    // Fetch selected bank accounts if we have IDs
+    if (selectedBankAccountIds.length > 0 && invoice.company_id) {
+      const { data: selectedBankAccounts } = await supabase
+        .from('company_bank_accounts')
+        .select(`
+          id,
+          bank_name,
+          account_number,
+          account_name,
+          is_default
+        `)
+        .in('id', selectedBankAccountIds)
+        .eq('company_id', invoice.company_id)
+        .eq('is_active', true)
+        .order('is_default', { ascending: false })
+
+      bankAccounts = selectedBankAccounts || []
+    }
+
+    // Fallback to single bank account if no company accounts
+    if (!bankAccounts || bankAccounts.length === 0) {
+      if (invoice.bank_account) {
+        bankAccounts = [invoice.bank_account]
+      }
+    }
+
     // Check if the public link has expired
     if (invoice.public_expires_at) {
       const expiresAt = new Date(invoice.public_expires_at)
@@ -99,6 +128,8 @@ export async function GET(
       id: invoice.id,
       invoice_number: invoice.invoice_number,
       bank_account: invoice.bank_account,
+      bank_accounts: bankAccounts,
+      notes: invoice.notes,
       company: invoice.company?.name
     })
     
@@ -108,7 +139,8 @@ export async function GET(
         invoice: {
           ...invoice,
           company: invoice.company,
-          bank_account: invoice.bank_account
+          bank_account: invoice.bank_account,
+          bank_accounts: bankAccounts
         }
       },
       headers: {

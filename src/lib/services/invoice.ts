@@ -29,6 +29,13 @@ export type InvoiceWithDetails = InvoiceWithClient & {
     account_number: string
     account_name?: string | null
   } | null
+  bank_accounts?: Array<{
+    id: string
+    bank_name: string
+    account_number: string
+    account_name?: string | null
+    is_primary?: boolean
+  }>
 }
 
 export type InvoiceStats = {
@@ -233,6 +240,48 @@ export const getInvoice = async (id: string): Promise<ServiceResult<InvoiceWithD
         error: 'ინვოისი ვერ მოიძებნა'
       }
     }
+
+    // Extract selected bank account IDs from notes field
+    let bankAccounts = null
+    let selectedBankAccountIds: string[] = []
+    
+    // Try to parse selected bank accounts from notes field
+    if ((data as any).notes) {
+      try {
+        const notesData = JSON.parse((data as any).notes)
+        if (notesData.selected_bank_account_ids && Array.isArray(notesData.selected_bank_account_ids)) {
+          selectedBankAccountIds = notesData.selected_bank_account_ids
+        }
+      } catch (error) {
+        console.error('Error parsing notes field:', error)
+      }
+    }
+    
+    // Fetch selected bank accounts if we have IDs
+    if (selectedBankAccountIds.length > 0 && data.company_id) {
+      const { data: selectedBankAccounts } = await supabase
+        .from('company_bank_accounts')
+        .select(`
+          id,
+          bank_name,
+          account_number,
+          account_name,
+          is_default
+        `)
+        .in('id', selectedBankAccountIds)
+        .eq('company_id', data.company_id)
+        .eq('is_active', true)
+        .order('is_default', { ascending: false })
+
+      bankAccounts = selectedBankAccounts || []
+    }
+
+    // Fallback to single bank account if no company accounts
+    if (!bankAccounts || bankAccounts.length === 0) {
+      if ((data as any).bank_account) {
+        bankAccounts = [(data as any).bank_account]
+      }
+    }
     
     // Sort items by sort_order
     if (data.items) {
@@ -240,9 +289,15 @@ export const getInvoice = async (id: string): Promise<ServiceResult<InvoiceWithD
         (a.sort_order || 0) - (b.sort_order || 0)
       )
     }
+
+    // Add bank_accounts to the response
+    const invoiceWithBankAccounts = {
+      ...data,
+      bank_accounts: bankAccounts
+    }
     
     return {
-      data: data as InvoiceWithDetails,
+      data: invoiceWithBankAccounts as InvoiceWithDetails,
       error: null
     }
     

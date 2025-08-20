@@ -422,21 +422,43 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
         <View style={styles.footer}>
           
           {/* Bank Account Information */}
-          {invoice.bank_account && (
+          {(invoice.bank_accounts && invoice.bank_accounts.length > 0) || invoice.bank_account ? (
             <View style={styles.footerSection}>
-              <Text style={styles.footerTitle}>საბანკო რეკვიზიტები:</Text>
+              <Text style={styles.footerTitle}>
+                {invoice.bank_accounts && invoice.bank_accounts.length > 1 ? 'საბანკო რეკვიზიტები:' : 'საბანკო რეკვიზიტები:'}
+              </Text>
               <View style={styles.bankInfo}>
-                <Text style={styles.footerText}>
-                  ბანკი: {invoice.bank_account.bank_name}
-                </Text>
-                <Text style={styles.footerText}>
-                  ანგარიში: {invoice.bank_account.account_number}
-                </Text>
-                {invoice.bank_account.account_name && (
-                  <Text style={styles.footerText}>
-                    მფლობელი: {invoice.bank_account.account_name}
-                  </Text>
-                )}
+                {invoice.bank_accounts && invoice.bank_accounts.length > 0 ? (
+                  invoice.bank_accounts.map((account, index) => (
+                    <View key={account.id} style={index > 0 ? { marginTop: 8, paddingTop: 8, borderTop: '1 solid #E5E7EB' } : {}}>
+                      <Text style={styles.footerText}>
+                        ბანკი: {account.bank_name} {account.is_primary ? '(მთავარი)' : ''}
+                      </Text>
+                      <Text style={styles.footerText}>
+                        ანგარიში: {account.account_number}
+                      </Text>
+                      {account.account_name && (
+                        <Text style={styles.footerText}>
+                          მფლობელი: {account.account_name}
+                        </Text>
+                      )}
+                    </View>
+                  ))
+                ) : invoice.bank_account ? (
+                  <>
+                    <Text style={styles.footerText}>
+                      ბანკი: {invoice.bank_account.bank_name}
+                    </Text>
+                    <Text style={styles.footerText}>
+                      ანგარიში: {invoice.bank_account.account_number}
+                    </Text>
+                    {invoice.bank_account.account_name && (
+                      <Text style={styles.footerText}>
+                        მფლობელი: {invoice.bank_account.account_name}
+                      </Text>
+                    )}
+                  </>
+                ) : null}
               </View>
             </View>
           )}

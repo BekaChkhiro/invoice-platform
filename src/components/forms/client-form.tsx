@@ -122,7 +122,6 @@ export function ClientForm({ initialData, onSubmit, isLoading = false }: ClientF
             <div className="space-y-2">
               <Label htmlFor="tax_id">
                 {clientType === "company" ? "საიდენტიფიკაციო კოდი" : "პირადი ნომერი"}
-                {clientType === "company" && " *"}
               </Label>
               <Input
                 id="tax_id"
