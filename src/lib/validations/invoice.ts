@@ -46,12 +46,6 @@ export const invoiceSchema = z.object({
     .min(0, 'დღგ განაკვეთი არ შეიძლება იყოს უარყოფითი')
     .max(100, 'დღგ განაკვეთი არ შეიძლება აღემატებოდეს 100%-ს')
     .default(18),
-  notes: z.string()
-    .max(1000, 'შენიშვნა ძალიან გრძელია')
-    .optional(),
-  payment_instructions: z.string()
-    .max(1000, 'გადახდის ინსტრუქცია ძალიან გრძელია')
-    .optional(),
   items: z.array(invoiceItemSchema)
     .min(1, 'მინიმუმ ერთი პროდუქტი/სერვისი აუცილებელია')
     .max(50, 'მაქსიმუმ 50 პროდუქტი/სერვისი შეიძლება')
@@ -253,8 +247,6 @@ export const createEmptyInvoice = (companyId: string): Partial<CreateInvoice> =>
   due_days: 14,
   currency: 'GEL',
   vat_rate: 18,
-  notes: '',
-  payment_instructions: '',
   items: [createEmptyInvoiceItem()] as InvoiceItem[]
 })
 
@@ -295,7 +287,7 @@ export const getInvoiceStatusColor = (status: Invoice['status']): string => {
  */
 export const getInvoiceStatusLabel = (status: Invoice['status']): string => {
   const labels = {
-    draft: 'მონახაზი',
+    draft: 'გადასახდელი',
     sent: 'გაგზავნილი',
     paid: 'გადახდილი', 
     overdue: 'ვადაგადაცილებული',

@@ -114,7 +114,7 @@ export function InvoicePreviewStep({ form, totals }: InvoicePreviewStepProps) {
               </div>
               <div className="text-right">
                 <Badge variant="secondary" className="mb-2">
-                  {formData.send_immediately ? 'გაიგზავნება' : 'მონახაზი'}
+                  {formData.send_immediately ? 'გაიგზავნება' : 'გადასახდელი'}
                 </Badge>
                 <div className="text-2xl font-bold">
                   {totals.total.toFixed(2)} {currencySymbol}
@@ -212,27 +212,6 @@ export function InvoicePreviewStep({ form, totals }: InvoicePreviewStepProps) {
               </div>
             </div>
 
-            {/* Notes and Payment Instructions */}
-            {(formData.notes || formData.payment_instructions) && (
-              <>
-                <Separator />
-                <div className="space-y-3">
-                  {formData.notes && (
-                    <div>
-                      <h4 className="font-medium mb-2">შენიშვნები</h4>
-                      <p className="text-sm text-muted-foreground">{formData.notes}</p>
-                    </div>
-                  )}
-                  
-                  {formData.payment_instructions && (
-                    <div>
-                      <h4 className="font-medium mb-2">გადახდის ინსტრუქციები</h4>
-                      <p className="text-sm text-muted-foreground">{formData.payment_instructions}</p>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
           </div>
         </CardContent>
       </Card>

@@ -549,47 +549,6 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
         </Card>
       </div>
 
-      <Separator />
-
-      {/* Notes and Payment Instructions */}
-      <div className="grid grid-cols-1 gap-6">
-        <FormField
-          control={form.control}
-          name="notes"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>შენიშვნები</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="დამატებითი ინფორმაცია ინვოისისთვის..."
-                  className="min-h-[80px]"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="payment_instructions"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>გადახდის ინსტრუქციები</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="გადახდის ინსტრუქციები კლიენტისთვის..."
-                  className="min-h-[80px]"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
       {/* Invoice Preview Number */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-center justify-between">

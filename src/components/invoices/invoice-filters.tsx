@@ -57,7 +57,7 @@ export function InvoiceFilters({
 
   const statusOptions = [
     { value: 'all', label: 'ყველა სტატუსი', color: 'gray' },
-    { value: 'draft', label: 'მონახაზი', color: 'gray' },
+    { value: 'draft', label: 'გადასახდელი', color: 'gray' },
     { value: 'sent', label: 'გაგზავნილი', color: 'blue' },
     { value: 'paid', label: 'გადახდილი', color: 'green' },
     { value: 'overdue', label: 'ვადაგადაცილებული', color: 'red' },

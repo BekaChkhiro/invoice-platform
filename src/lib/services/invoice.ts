@@ -141,7 +141,6 @@ export const getInvoices = async (filter: InvoiceFilter): Promise<ServiceListRes
     if (filter.search) {
       query = query.or(`
         invoice_number.ilike.%${filter.search}%,
-        notes.ilike.%${filter.search}%,
         clients.name.ilike.%${filter.search}%
       `)
     }
@@ -284,9 +283,7 @@ export const createInvoice = async (data: CreateInvoice): Promise<ServiceResult<
         issue_date: data.issue_date.toISOString().split('T')[0],
         due_date: due_date.toISOString().split('T')[0],
         currency: data.currency,
-        vat_rate: data.vat_rate,
-        notes: data.notes,
-        payment_instructions: data.payment_instructions
+        vat_rate: data.vat_rate
       })
       .select()
       .single()
@@ -394,7 +391,7 @@ export const updateInvoice = async (data: UpdateInvoice): Promise<ServiceResult<
     if (currentInvoice.status !== 'draft') {
       return {
         data: null,
-        error: 'მხოლოდ მონახაზის სტატუსის ინვოისები შეიძლება რედაქტირდეს'
+        error: 'მხოლოდ გადასახდელი სტატუსის ინვოისები შეიძლება რედაქტირდეს'
       }
     }
     
@@ -543,14 +540,38 @@ export const deleteInvoice = async (id: string): Promise<{ success: boolean; err
       }
     }
     
+    // For non-draft invoices, first change to draft status to allow deletion
     if (invoice.status !== 'draft') {
-      return {
-        success: false,
-        error: 'მხოლოდ მონახაზის სტატუსის ინვოისები შეიძლება წაიშალოს'
+      const { error: updateError } = await supabase
+        .from('invoices')
+        .update({ 
+          status: 'draft',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+
+      if (updateError) {
+        return {
+          success: false,
+          error: handleError(updateError, 'deleteInvoice - change to draft')
+        }
       }
     }
     
-    // Delete invoice (items will be deleted by cascade)
+    // Delete invoice items first
+    const { error: itemsError } = await supabase
+      .from('invoice_items')
+      .delete()
+      .eq('invoice_id', id)
+    
+    if (itemsError) {
+      return {
+        success: false,
+        error: handleError(itemsError, 'deleteInvoice - items')
+      }
+    }
+    
+    // Delete invoice
     const { error } = await supabase
       .from('invoices')
       .delete()
@@ -608,8 +629,6 @@ export const duplicateInvoice = async (id: string): Promise<ServiceResult<Invoic
       due_days: 14,
       currency: original.currency,
       vat_rate: original.vat_rate,
-      notes: original.notes,
-      payment_instructions: original.payment_instructions,
       items: original.items.map(item => ({
         description: item.description,
         quantity: item.quantity,

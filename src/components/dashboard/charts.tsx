@@ -305,7 +305,7 @@ function StatusDistributionChart({ stats }: { stats: InvoiceStats }) {
         amount: stats.overdueAmount 
       },
       { 
-        name: 'მონახაზი', 
+        name: 'გადასახდელი', 
         value: stats.draftCount, 
         color: '#6b7280',
         amount: 0 

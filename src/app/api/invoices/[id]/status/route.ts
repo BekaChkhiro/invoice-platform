@@ -108,7 +108,7 @@ export async function PATCH(
 
     // Return success response with Georgian status message
     const statusMessages = {
-      draft: 'ინვოისი გადავიდა მონახაზის სტატუსში',
+      draft: 'ინვოისი გადავიდა გადასახდელი სტატუსში',
       sent: 'ინვოისი მონიშნულია როგორც გაგზავნილი',
       paid: 'ინვოისი მონიშნულია როგორც გადახდილი',
       overdue: 'ინვოისი მონიშნულია როგორც ვადაგადაცილებული',

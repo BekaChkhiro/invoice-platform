@@ -136,7 +136,7 @@ export function PDFPreview({
               variant={invoice.status === 'paid' ? 'default' : 'secondary'}
               className="capitalize"
             >
-              {invoice.status === 'draft' && 'მონახაზი'}
+              {invoice.status === 'draft' && 'გადასახდელი'}
               {invoice.status === 'sent' && 'გაგზავნილი'}
               {invoice.status === 'paid' && 'გადახდილი'}
               {invoice.status === 'overdue' && 'ვადაგადაცილებული'}

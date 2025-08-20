@@ -310,47 +310,63 @@ export async function DELETE(
     }
 
     if (invoices && invoices.length > 0) {
-      // Soft delete - set is_active to false
-      const { error: softDeleteError } = await supabase
-        .from('clients')
-        .update({ 
-          is_active: false,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
+      // Delete all invoice items first
+      const { data: allInvoices } = await supabase
+        .from('invoices')
+        .select('id')
+        .eq('client_id', id)
 
-      if (softDeleteError) {
-        console.error('Error soft deleting client:', softDeleteError)
-        return NextResponse.json(
-          { error: 'კლიენტის დეაქტივაცია ვერ მოხერხდა' },
-          { status: 500 }
-        )
+      if (allInvoices && allInvoices.length > 0) {
+        const invoiceIds = allInvoices.map(inv => inv.id)
+        
+        // Delete all invoice items for these invoices
+        const { error: itemsDeleteError } = await supabase
+          .from('invoice_items')
+          .delete()
+          .in('invoice_id', invoiceIds)
+
+        if (itemsDeleteError) {
+          console.error('Error deleting invoice items:', itemsDeleteError)
+          return NextResponse.json(
+            { error: 'ინვოისის ელემენტების წაშლა ვერ მოხერხდა' },
+            { status: 500 }
+          )
+        }
+
+        // Delete all invoices
+        const { error: invoicesDeleteError } = await supabase
+          .from('invoices')
+          .delete()
+          .eq('client_id', id)
+
+        if (invoicesDeleteError) {
+          console.error('Error deleting invoices:', invoicesDeleteError)
+          return NextResponse.json(
+            { error: 'ინვოისების წაშლა ვერ მოხერხდა' },
+            { status: 500 }
+          )
+        }
       }
-
-      return NextResponse.json({
-        message: 'კლიენტი დეაქტივირებულია (არსებობს ინვოისები)',
-        soft_deleted: true
-      })
-    } else {
-      // Hard delete - completely remove client
-      const { error: deleteError } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', id)
-
-      if (deleteError) {
-        console.error('Error deleting client:', deleteError)
-        return NextResponse.json(
-          { error: 'კლიენტის წაშლა ვერ მოხერხდა' },
-          { status: 500 }
-        )
-      }
-
-      return NextResponse.json({
-        message: 'კლიენტი წარმატებით წაიშალა',
-        hard_deleted: true
-      })
     }
+
+    // Now delete the client
+    const { error: deleteError } = await supabase
+      .from('clients')
+      .delete()
+      .eq('id', id)
+
+    if (deleteError) {
+      console.error('Error deleting client:', deleteError)
+      return NextResponse.json(
+        { error: 'კლიენტის წაშლა ვერ მოხერხდა' },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({
+      message: 'კლიენტი და ყველა დაკავშირებული ინვოისი წარმატებით წაიშალა',
+      hard_deleted: true
+    })
 
   } catch (error) {
     console.error('Unexpected error in DELETE /api/clients/[id]:', error)

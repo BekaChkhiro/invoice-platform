@@ -59,38 +59,38 @@ export function ClientStatsCards({ stats, isLoading }: ClientStatsCardsProps) {
   const cards = [
     {
       title: 'სულ კლიენტები',
-      value: formatNumber(stats.total_clients),
-      subtitle: `${formatNumber(stats.active_clients)} აქტიური • ${formatNumber(stats.inactive_clients)} არააქტიური`,
+      value: formatNumber(stats?.total_clients || 0),
+      subtitle: `${formatNumber(stats?.active_clients || 0)} აქტიური • ${formatNumber(stats?.inactive_clients || 0)} არააქტიური`,
       icon: Users,
-      trend: stats.growth_percentage > 0 
-        ? `+${formatPercent(stats.growth_percentage)} ზრდა`
-        : stats.growth_percentage < 0 
-        ? `${formatPercent(stats.growth_percentage)} კლება`
+      trend: (stats?.growth_percentage || 0) > 0 
+        ? `+${formatPercent(stats?.growth_percentage || 0)} ზრდა`
+        : (stats?.growth_percentage || 0) < 0 
+        ? `${formatPercent(stats?.growth_percentage || 0)} კლება`
         : 'უცვლელი',
       color: 'blue'
     },
     {
       title: 'ახალი კლიენტები',
-      value: formatNumber(stats.new_this_month),
+      value: formatNumber(stats?.new_this_month || 0),
       subtitle: 'ამ თვეში დარეგისტრირებული',
       icon: TrendingUp,
-      trend: stats.growth_percentage > 0 ? 'მზარდი ტენდენცია' : 'სტაბილური',
-      color: stats.new_this_month > 0 ? 'green' : 'gray'
+      trend: (stats?.growth_percentage || 0) > 0 ? 'მზარდი ტენდენცია' : 'სტაბილური',
+      color: (stats?.new_this_month || 0) > 0 ? 'green' : 'gray'
     },
     {
       title: 'კლიენტების ტიპები',
-      value: `${Math.round((stats.companies / stats.total_clients) * 100)}%`,
-      subtitle: `${formatNumber(stats.companies)} კომპანია • ${formatNumber(stats.individuals)} ფიზ. პირი`,
+      value: `${Math.round(((stats?.companies || 0) / (stats?.total_clients || 1)) * 100)}%`,
+      subtitle: `${formatNumber(stats?.companies || 0)} კომპანია • ${formatNumber(stats?.individuals || 0)} ფიზ. პირი`,
       icon: Building,
-      trend: stats.companies > stats.individuals ? 'კომპანიები ლიდერობენ' : 'ფიზ. პირები ლიდერობენ',
+      trend: (stats?.companies || 0) > (stats?.individuals || 0) ? 'კომპანიები ლიდერობენ' : 'ფიზ. პირები ლიდერობენ',
       color: 'purple'
     },
     {
       title: 'საშუალო შემოსავალი',
-      value: formatCurrency(stats.revenue_stats.average_per_client),
-      subtitle: `სულ: ${formatCurrency(stats.revenue_stats.total_revenue)}`,
+      value: formatCurrency(stats?.revenue_stats?.average_per_client || 0),
+      subtitle: `სულ: ${formatCurrency(stats?.revenue_stats?.total_revenue || 0)}`,
       icon: DollarSign,
-      trend: `ტოპ კლიენტები: ${formatCurrency(stats.revenue_stats.top_clients_revenue)}`,
+      trend: `ტოპ კლიენტები: ${formatCurrency(stats?.revenue_stats?.top_clients_revenue || 0)}`,
       color: 'green'
     }
   ]
@@ -98,29 +98,29 @@ export function ClientStatsCards({ stats, isLoading }: ClientStatsCardsProps) {
   const paymentBehaviorCards = [
     {
       title: 'შესანიშნავი გადამხდელები',
-      value: formatNumber(stats.payment_behavior_distribution.excellent),
-      percentage: Math.round((stats.payment_behavior_distribution.excellent / stats.total_clients) * 100),
+      value: formatNumber(stats?.payment_behavior_distribution?.excellent || 0),
+      percentage: Math.round(((stats?.payment_behavior_distribution?.excellent || 0) / (stats?.total_clients || 1)) * 100),
       icon: Star,
       color: 'green'
     },
     {
       title: 'კარგი გადამხდელები',
-      value: formatNumber(stats.payment_behavior_distribution.good),
-      percentage: Math.round((stats.payment_behavior_distribution.good / stats.total_clients) * 100),
+      value: formatNumber(stats?.payment_behavior_distribution?.good || 0),
+      percentage: Math.round(((stats?.payment_behavior_distribution?.good || 0) / (stats?.total_clients || 1)) * 100),
       icon: UserCheck,
       color: 'blue'
     },
     {
       title: 'საშუალო გადამხდელები',
-      value: formatNumber(stats.payment_behavior_distribution.average),
-      percentage: Math.round((stats.payment_behavior_distribution.average / stats.total_clients) * 100),
+      value: formatNumber(stats?.payment_behavior_distribution?.average || 0),
+      percentage: Math.round(((stats?.payment_behavior_distribution?.average || 0) / (stats?.total_clients || 1)) * 100),
       icon: Target,
       color: 'yellow'
     },
     {
       title: 'ცუდი გადამხდელები',
-      value: formatNumber(stats.payment_behavior_distribution.poor),
-      percentage: Math.round((stats.payment_behavior_distribution.poor / stats.total_clients) * 100),
+      value: formatNumber(stats?.payment_behavior_distribution?.poor || 0),
+      percentage: Math.round(((stats?.payment_behavior_distribution?.poor || 0) / (stats?.total_clients || 1)) * 100),
       icon: UserX,
       color: 'red'
     }

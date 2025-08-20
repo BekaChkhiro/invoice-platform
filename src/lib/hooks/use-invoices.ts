@@ -51,7 +51,7 @@ const messages = {
   duplicateSuccess: (number: string) => `ინვოისი ${number}-ის კოპია შეიქმნა`,
   statusSent: 'ინვოისი მონიშნულია როგორც გაგზავნილი',
   statusPaid: 'ინვოისი მონიშნულია როგორც გადახდილი',
-  statusDraft: 'ინვოისი დაბრუნდა მონახაზის სტატუსზე',
+  statusDraft: 'ინვოისი დაბრუნდა გადასახდელი სტატუსზე',
   statusOverdue: 'ინვოისი მონიშნულია როგორც ვადაგადაცილებული',
   statusCancelled: 'ინვოისი გაუქმებულია',
   errorGeneral: 'დაფიქსირდა შეცდომა. სცადეთ ხელახლა',

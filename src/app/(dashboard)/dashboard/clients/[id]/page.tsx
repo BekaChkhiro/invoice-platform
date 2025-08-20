@@ -520,7 +520,7 @@ export default function ClientDetailPage() {
                         <div className="text-right space-y-1">
                           <div className="font-medium">{formatCurrency(Number(invoice.total))}</div>
                           <Badge variant="secondary" className="text-xs">
-                            {invoice.status === 'draft' && 'მონახაზი'}
+                            {invoice.status === 'draft' && 'გადასახდელი'}
                             {invoice.status === 'sent' && 'გაგზავნილი'}
                             {invoice.status === 'paid' && 'გადახდილი'}
                             {invoice.status === 'overdue' && 'ვადაგადაცილებული'}

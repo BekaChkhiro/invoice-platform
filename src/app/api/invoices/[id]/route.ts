@@ -331,21 +331,43 @@ export async function DELETE(
       )
     }
 
-    // Only allow deletion of draft invoices
+    // For non-draft invoices, first change to draft status to allow deletion
     if (invoice.status !== 'draft') {
+      const { error: updateError } = await supabase
+        .from('invoices')
+        .update({ 
+          status: 'draft',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+
+      if (updateError) {
+        console.error('Error changing invoice to draft:', updateError)
+        return NextResponse.json(
+          { error: 'ინვოისის სტატუსის შეცვლა ვერ მოხერხდა' },
+          { status: 500 }
+        )
+      }
+    }
+
+    // Delete invoice items first
+    const { error: itemsDeleteError } = await supabase
+      .from('invoice_items')
+      .delete()
+      .eq('invoice_id', id)
+
+    if (itemsDeleteError) {
+      console.error('Error deleting invoice items:', itemsDeleteError)
       return NextResponse.json(
-        { error: 'მხოლოდ მონახაზის სტატუსის ინვოისის წაშლა შეიძლება' },
-        { status: 403 }
+        { error: 'ინვოისის ელემენტების წაშლა ვერ მოხერხდა' },
+        { status: 500 }
       )
     }
 
-    // Soft delete - add deleted_at timestamp
+    // Delete the invoice
     const { error: deleteError } = await supabase
       .from('invoices')
-      .update({ 
-        status: 'cancelled',
-        updated_at: new Date().toISOString()
-      })
+      .delete()
       .eq('id', id)
 
     if (deleteError) {

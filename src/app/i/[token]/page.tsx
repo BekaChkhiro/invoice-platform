@@ -150,7 +150,7 @@ export default async function PublicInvoicePage({ params }: { params: { token: s
           </div>
         </div>
         <div className="rounded-lg border bg-background p-4 shadow-sm">
-          <h2 className="font-medium mb-2">გადამახდელი</h2>
+          <h2 className="font-medium mb-2">გადამხდელი</h2>
           <div className="text-sm space-y-1">
             <div className="font-semibold text-foreground">{invoice.client?.name || 'კლიენტი'}</div>
             {invoice.client?.type && (
@@ -241,25 +241,9 @@ export default async function PublicInvoicePage({ params }: { params: { token: s
         </div>
       </div>
 
-      {invoice.payment_instructions && (
-        <div className="mt-6 rounded-lg border bg-background p-4 shadow-sm">
-          <h3 className="font-medium mb-2">გადახდის ინსტრუქციები</h3>
-          <p className="whitespace-pre-wrap text-sm text-muted-foreground">{invoice.payment_instructions}</p>
-        </div>
-      )}
-
-      {invoice.notes && (
-        <div className="mt-4 rounded-lg border bg-background p-4 shadow-sm">
-          <h3 className="font-medium mb-2">შენიშვნები</h3>
-          <p className="whitespace-pre-wrap text-sm text-muted-foreground">{invoice.notes}</p>
-        </div>
-      )}
-
-      {!invoice.notes && !invoice.payment_instructions && (
-        <div className="mt-4 text-sm text-muted-foreground">
-          გმადლობთ ამ ინვოისის არჩევისთვის.
-        </div>
-      )}
+      <div className="mt-4 text-sm text-muted-foreground">
+        გმადლობთ ამ ინვოისის არჩევისთვის.
+      </div>
       </div>
       </div>
 

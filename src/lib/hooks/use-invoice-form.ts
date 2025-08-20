@@ -22,8 +22,6 @@ const invoiceFormSchema = z.object({
   due_days: z.number().min(1).max(365).default(14),
   currency: z.enum(['GEL', 'USD', 'EUR']).default('GEL'),
   vat_rate: z.number().min(0).max(100).default(18),
-  notes: z.string().max(1000).optional(),
-  payment_instructions: z.string().max(1000).optional(),
   items: z.array(invoiceItemSchema).min(1, 'მინიმუმ ერთი პროდუქტი/სერვისი აუცილებელია'),
   bank_account_id: z.string().nullable().optional(),
   send_immediately: z.boolean().default(false)
@@ -77,8 +75,6 @@ export function useInvoiceForm() {
       due_days: 14,
       currency: 'GEL',
       vat_rate: 18,
-      notes: '',
-      payment_instructions: '',
       items: [{
         description: '',
         quantity: 1,
@@ -283,8 +279,6 @@ export function useInvoiceForm() {
           due_days: data.due_days ?? 14,
           currency: data.currency || 'GEL',
           vat_rate: data.vat_rate ?? 18,
-          notes: data.notes || '',
-          payment_instructions: data.payment_instructions || '',
           bank_account_id: data.bank_account_id || null,
           send_immediately: data.send_immediately ?? false,
           items: data.items ? data.items.map((item: any, index: number) => ({

@@ -136,7 +136,6 @@ export function EmailDialog({
       issue_date: new Date(invoice.issue_date).toLocaleDateString('ka-GE'),
       due_date: new Date(invoice.due_date).toLocaleDateString('ka-GE'),
       company_name: 'თქვენი კომპანია',
-      payment_instructions: invoice.payment_instructions || 'გადახდის ინსტრუქციები მითითებული არ არის',
       custom_message: formData.customMessage || ''
     }
 

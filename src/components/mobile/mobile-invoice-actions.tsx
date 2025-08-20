@@ -242,7 +242,7 @@ export function SwipeableInvoiceCard({
 
   const getStatusLabel = (status: string) => {
     const labels = {
-      draft: 'მონახაზი',
+      draft: 'გადასახდელი',
       sent: 'გაგზავნილი',
       paid: 'გადახდილი',
       overdue: 'ვადაგადაცილებული',

@@ -226,8 +226,6 @@ export interface Database {
           vat_rate: number
           vat_amount: number
           total: number
-          notes: string | null
-          payment_instructions: string | null
           created_at: string | null
           updated_at: string | null
           currency: 'GEL' | 'USD' | 'EUR' | null
@@ -246,8 +244,6 @@ export interface Database {
           vat_rate?: number
           vat_amount?: number
           total?: number
-          notes?: string | null
-          payment_instructions?: string | null
           created_at?: string | null
           updated_at?: string | null
           currency?: 'GEL' | 'USD' | 'EUR' | null
@@ -266,8 +262,6 @@ export interface Database {
           vat_rate?: number
           vat_amount?: number
           total?: number
-          notes?: string | null
-          payment_instructions?: string | null
           created_at?: string | null
           updated_at?: string | null
           currency?: 'GEL' | 'USD' | 'EUR' | null
@@ -344,7 +338,7 @@ export const CLIENT_TYPES = {
 } as const
 
 export const INVOICE_STATUS = {
-  draft: 'დრაფტი',
+  draft: 'გადასახდელი',
   sent: 'გაგზავნილი',
   paid: 'გადახდილი',
   overdue: 'ვადაგადაცილებული'

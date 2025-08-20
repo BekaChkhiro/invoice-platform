@@ -196,12 +196,49 @@ export const clientService = {
   async deleteClient(id: string) {
     const supabase = createClient()
     
-    const { error } = await supabase
-      .from('clients')
-      .delete()
-      .eq('id', id)
+    try {
+      // First check for invoices
+      const { data: invoices } = await supabase
+        .from('invoices')
+        .select('id')
+        .eq('client_id', id)
+      
+      if (invoices && invoices.length > 0) {
+        // Delete invoice items first
+        const invoiceIds = invoices.map(inv => inv.id)
+        
+        const { error: itemsError } = await supabase
+          .from('invoice_items')
+          .delete()
+          .in('invoice_id', invoiceIds)
+        
+        if (itemsError) throw itemsError
+        
+        // Delete invoices
+        const { error: invoicesError } = await supabase
+          .from('invoices')
+          .delete()
+          .eq('client_id', id)
+        
+        if (invoicesError) throw invoicesError
+      }
+      
+      // Finally delete the client
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .eq('id', id)
 
-    if (error) throw error
+      if (error) throw error
+      
+      return { success: true, message: 'კლიენტი წარმატებით წაიშალა' }
+    } catch (error) {
+      console.error('Error deleting client:', error)
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'კლიენტის წაშლა ვერ მოხერხდა' 
+      }
+    }
   },
 
   // Toggle client active status
@@ -217,24 +254,18 @@ export const clientService = {
   },
 
   // Get client statistics
-  async getClientStats(companyId: string) {
-    const supabase = createClient()
-    
-    const { data, error } = await supabase
-      .from('clients')
-      .select('type, is_active')
-      .eq('company_id', companyId)
-
-    if (error) throw error
-
-    const stats = {
-      total: data.length,
-      active: data.filter(c => c.is_active).length,
-      inactive: data.filter(c => !c.is_active).length,
-      individuals: data.filter(c => c.type === 'individual').length,
-      companies: data.filter(c => c.type === 'company').length,
+  async getClientStats() {
+    try {
+      const response = await fetch('/api/clients/stats')
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch client stats')
+      }
+      
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching client stats:', error)
+      throw error
     }
-
-    return stats
   }
 }

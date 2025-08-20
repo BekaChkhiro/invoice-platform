@@ -279,7 +279,7 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
   
   const getStatusLabel = (status: string): string => {
     const labels = {
-      draft: 'მონახაზი',
+      draft: 'გადასახდელი',
       sent: 'გაგზავნილი',
       paid: 'გადახდილი',
       overdue: 'ვადაგადაცილებული',
@@ -301,7 +301,7 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
         
         {/* Draft Watermark */}
         {invoice.status === 'draft' && (
-          <Text style={styles.watermark}>მონახაზი</Text>
+          <Text style={styles.watermark}>გადასახდელი</Text>
         )}
 
         {/* Header */}
@@ -339,7 +339,7 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
 
         {/* Client Information */}
         <View style={styles.clientSection}>
-          <Text style={styles.clientTitle}>ღებულ:</Text>
+          <Text style={styles.clientTitle}>გადამხდელი:</Text>
           <Text style={styles.clientName}>{invoice.client.name}</Text>
           <View style={styles.clientDetails}>
             {invoice.client.email && (
@@ -441,25 +441,6 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice }) => {
             </View>
           )}
           
-          {/* Payment Instructions */}
-          {invoice.payment_instructions && (
-            <View style={styles.footerSection}>
-              <Text style={styles.footerTitle}>გადახდის ინსტრუქციები:</Text>
-              <Text style={styles.footerText}>
-                {invoice.payment_instructions}
-              </Text>
-            </View>
-          )}
-
-          {/* Notes */}
-          {invoice.notes && (
-            <View style={styles.footerSection}>
-              <Text style={styles.footerTitle}>შენიშვნები:</Text>
-              <Text style={styles.footerText}>
-                {invoice.notes}
-              </Text>
-            </View>
-          )}
 
           {/* Additional Footer Info */}
           <View style={styles.footerSection}>

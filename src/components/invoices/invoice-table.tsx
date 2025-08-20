@@ -73,7 +73,7 @@ export function InvoiceTable({
 
   const getStatusBadge = (status: Invoice['status']) => {
     const statusConfig = {
-      draft: { label: 'მონახაზი', variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800' },
+      draft: { label: 'გადასახდელი', variant: 'secondary' as const, className: 'bg-gray-100 text-gray-800' },
       sent: { label: 'გაგზავნილი', variant: 'secondary' as const, className: 'bg-blue-100 text-blue-800' },
       paid: { label: 'გადახდილი', variant: 'secondary' as const, className: 'bg-green-100 text-green-800' },
       overdue: { label: 'ვადაგადაცილებული', variant: 'destructive' as const, className: 'bg-red-100 text-red-800' },

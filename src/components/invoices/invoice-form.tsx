@@ -75,8 +75,6 @@ export function InvoiceForm({
       due_date: new Date(initialData.due_date),
       currency: initialData.currency,
       vat_rate: initialData.vat_rate,
-      notes: initialData.notes || '',
-      payment_instructions: initialData.payment_instructions || '',
       items: initialData.items || [createEmptyInvoiceItem()]
     } : {
       company_id: companyId,
@@ -85,8 +83,6 @@ export function InvoiceForm({
       due_days: 14,
       currency: 'GEL' as const,
       vat_rate: 18,
-      notes: '',
-      payment_instructions: '',
       items: [createEmptyInvoiceItem()]
     },
     mode: 'onChange'
@@ -229,7 +225,7 @@ export function InvoiceForm({
           {mode === 'create' && isDraftSaved && (
             <div className="flex items-center space-x-2">
               <Badge variant="secondary" className="bg-green-100 text-green-800">
-                მონახაზი შენახულია
+                გადასახდელი შენახულია
               </Badge>
               <Button variant="ghost" size="sm" onClick={clearDraft}>
                 <X className="h-4 w-4" />
@@ -483,60 +479,6 @@ export function InvoiceForm({
               </CardContent>
             </Card>
 
-            {/* Additional Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle>დამატებითი ინფორმაცია</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                
-                {/* Notes */}
-                <FormField
-                  control={form.control}
-                  name="notes"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>შენიშვნები</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="ინვოისზე გამოჩნდება..."
-                          className="resize-none"
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        ეს ტექსტი გამოჩნდება ინვოისზე
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {/* Payment Instructions */}
-                <FormField
-                  control={form.control}
-                  name="payment_instructions"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>გადახდის ინსტრუქციები</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="საბანკო რეკვიზიტები და გადახდის პირობები..."
-                          className="resize-none"
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        გადახდის დეტალები და ინსტრუქციები
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
           </div>
 
           {/* Right Column - Totals and Actions */}
@@ -592,7 +534,7 @@ export function InvoiceForm({
                       ) : (
                         <>
                           <Save className="mr-2 h-4 w-4" />
-                          მონახაზის შენახვა
+                          გადასახდელის შენახვა
                         </>
                       )}
                     </Button>
@@ -648,7 +590,7 @@ export function InvoiceForm({
             {mode === 'create' && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-sm">მონახაზის აღდგენა</CardTitle>
+                  <CardTitle className="text-sm">გადასახდელის აღდგენა</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-xs text-gray-600 mb-2">
@@ -661,7 +603,7 @@ export function InvoiceForm({
                     onClick={clearDraft}
                     className="text-xs h-8"
                   >
-                    მონახაზის გასუფთავება
+                    გადასახდელის გასუფთავება
                   </Button>
                 </CardContent>
               </Card>

@@ -514,7 +514,7 @@ export default function AnalyticsPage() {
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-                        <span>მონახაზი</span>
+                        <span>გადასახდელი</span>
                       </div>
                       <div className="font-medium">{stats.draftCount}</div>
                     </div>

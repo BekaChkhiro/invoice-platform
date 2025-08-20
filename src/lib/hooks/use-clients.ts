@@ -242,15 +242,18 @@ export function useDeleteClient() {
     },
     
     onSuccess: (result, clientId) => {
-      if (result.success) {
+      if (result && result.success) {
         // Show success message
-        toast.success('კლიენტი წარმატებით წაიშალა')
+        toast.success(result.message || 'კლიენტი წარმატებით წაიშალა')
         
         // Invalidate lists to remove deleted client
         queryClient.invalidateQueries({ queryKey: clientKeys.lists() })
         
         // Invalidate stats
         queryClient.invalidateQueries({ queryKey: clientKeys.all })
+      } else {
+        // Show error if deletion failed
+        toast.error(result?.message || 'კლიენტის წაშლა ვერ მოხერხდა')
       }
     },
     

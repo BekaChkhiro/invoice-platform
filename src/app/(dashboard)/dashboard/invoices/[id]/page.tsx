@@ -361,7 +361,7 @@ export default function InvoiceDetailPage() {
     switch (status) {
       case 'draft':
         return { 
-          label: 'მონახაზი', 
+          label: 'გადასახდელი', 
           variant: 'secondary' as const, 
           icon: FileText,
           color: 'text-gray-500'
@@ -715,29 +715,6 @@ export default function InvoiceDetailPage() {
             </Card>
           )}
 
-          {/* Notes */}
-          {invoice.notes && (
-            <Card>
-              <CardHeader>
-                <CardTitle>შენიშვნები</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm whitespace-pre-wrap">{invoice.notes}</p>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Payment Instructions */}
-          {invoice.payment_instructions && (
-            <Card>
-              <CardHeader>
-                <CardTitle>გადახდის ინსტრუქციები</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm whitespace-pre-wrap">{invoice.payment_instructions}</p>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         {/* Sidebar */}
