@@ -308,26 +308,65 @@ export default function InvoiceDetailPage() {
     }
   }
 
-  // Enable or rotate and copy public link
+  // Copy public link - use existing token if available, create new if not
   const handleCopyPublicLink = async () => {
     if (!invoice) return
     try {
       setActionLoading(true)
+      
+      // Check if invoice already has a public token and is enabled
+      if (invoice.public_enabled && invoice.public_token) {
+        // Use existing token instead of creating new one
+        const url = `${window.location.origin}/i/${invoice.public_token}`
+        setPublicLink(url)
+        await navigator.clipboard.writeText(url)
+        toast({ title: 'ლინკი დაკოპირდა', description: 'არსებული საჯარო ლინკი დაკოპირდა ბუფერში' })
+        return
+      }
+      
+      // Create new public link only if one doesn't exist or is disabled
       const res = await fetch(`/api/invoices/${invoice.id}/public-link`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rotate: true })
+        body: JSON.stringify({ rotate: false }) // Don't rotate if we're here, just enable
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Public ლინკის შექმნა ვერ მოხერხდა')
       const url = data.url as string
       setPublicLink(url)
       await navigator.clipboard.writeText(url)
-      toast({ title: 'ლინკი შექმნილია', description: 'ლინკი დაკოპირდა ბუფერში' })
+      toast({ title: 'ლინკი შექმნილია', description: 'ახალი ლინკი შექმნილია და დაკოპირდა ბუფერში' })
     } catch (error) {
       toast({
         title: 'შეცდომა',
-        description: error instanceof Error ? error.message : 'Public ლინკის შექმნა ვერ მოხერხდა',
+        description: error instanceof Error ? error.message : 'Public ლინკის კოპირება ვერ მოხერხდა',
+        variant: 'destructive'
+      })
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  // Create new public link (rotate token)
+  const handleCreateNewPublicLink = async () => {
+    if (!invoice) return
+    try {
+      setActionLoading(true)
+      const res = await fetch(`/api/invoices/${invoice.id}/public-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rotate: true }) // Force rotate to create new token
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'ახალი Public ლინკის შექმნა ვერ მოხერხდა')
+      const url = data.url as string
+      setPublicLink(url)
+      await navigator.clipboard.writeText(url)
+      toast({ title: 'ახალი ლინკი შექმნილია', description: 'ახალი Public ლინკი შექმნილია და დაკოპირდა ბუფერში' })
+    } catch (error) {
+      toast({
+        title: 'შეცდომა',
+        description: error instanceof Error ? error.message : 'ახალი Public ლინკის შექმნა ვერ მოხერხდა',
         variant: 'destructive'
       })
     } finally {
@@ -508,6 +547,10 @@ export default function InvoiceDetailPage() {
               <DropdownMenuItem onClick={handleCopyPublicLink} disabled={actionLoading}>
                 <LinkIcon className="w-4 h-4 mr-2" />
                 Public ლინკის კოპირება
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCreateNewPublicLink} disabled={actionLoading}>
+                <Copy className="w-4 h-4 mr-2" />
+                ახალი Public ლინკის შექმნა
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleDisablePublicLink} disabled={actionLoading}>
                 <Trash2 className="w-4 h-4 mr-2" />

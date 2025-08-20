@@ -240,6 +240,9 @@ export async function POST(request: NextRequest) {
     const nextCounter = (company.invoice_counter || 0) + 1
     const invoiceNumber = `${company.invoice_prefix || 'INV'}-${currentYear}-${String(nextCounter).padStart(4, '0')}`
 
+    // Generate public token for the invoice
+    const publicToken = crypto.randomUUID().replace(/-/g, '')
+
     // Start transaction
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
@@ -250,7 +253,9 @@ export async function POST(request: NextRequest) {
         vat_rate: vatRate,
         vat_amount: Math.round(vatAmount * 100) / 100,
         total: Math.round(total * 100) / 100,
-        status: 'draft'
+        status: 'draft',
+        public_token: publicToken,
+        public_enabled: true
       })
       .select()
       .single()

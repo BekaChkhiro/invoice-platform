@@ -328,6 +328,10 @@ export const createInvoice = async (data: CreateInvoice): Promise<ServiceResult<
     const due_date = new Date(data.issue_date)
     due_date.setDate(due_date.getDate() + (data.due_days || 14))
     
+    // Use provided public token or generate a new one for automatic public page
+    const publicToken = data.public_token || crypto.randomUUID().replace(/-/g, '')
+    const publicEnabled = data.public_enabled !== undefined ? data.public_enabled : true
+    
     // Start transaction
     const { data: invoiceData, error: invoiceError } = await supabase
       .from('invoices')
@@ -338,7 +342,10 @@ export const createInvoice = async (data: CreateInvoice): Promise<ServiceResult<
         issue_date: data.issue_date.toISOString().split('T')[0],
         due_date: due_date.toISOString().split('T')[0],
         currency: data.currency,
-        vat_rate: data.vat_rate
+        vat_rate: data.vat_rate,
+        public_token: publicToken,
+        public_enabled: publicEnabled,
+        ...(data.public_expires_at && { public_expires_at: data.public_expires_at.toISOString() })
       })
       .select()
       .single()
@@ -662,8 +669,6 @@ export const deleteInvoice = async (id: string): Promise<{ success: boolean; err
  * Create copy of existing invoice as draft
  */
 export const duplicateInvoice = async (id: string): Promise<ServiceResult<Invoice>> => {
-  const supabase = getSupabase()
-  
   try {
     // Get original invoice with items
     const originalResult = await getInvoice(id)
@@ -691,13 +696,59 @@ export const duplicateInvoice = async (id: string): Promise<ServiceResult<Invoic
       }))
     }
     
-    // Create the duplicate
+    // Create the duplicate with a new public token
     return await createInvoice(newInvoiceData)
     
   } catch (error) {
     return {
       data: null,
       error: handleError(error, 'duplicateInvoice')
+    }
+  }
+}
+
+/**
+ * Create copy of existing invoice keeping the same public page token
+ */
+export const copyInvoiceWithPublicPage = async (id: string): Promise<ServiceResult<Invoice>> => {
+  try {
+    // Get original invoice with items
+    const originalResult = await getInvoice(id)
+    if (originalResult.error || !originalResult.data) {
+      return {
+        data: null,
+        error: originalResult.error || 'ორიგინალი ინვოისი ვერ მოიძებნა'
+      }
+    }
+    
+    const original = originalResult.data
+    
+    // Create new invoice data with the same public token
+    const newInvoiceData: CreateInvoice = {
+      company_id: original.company_id,
+      client_id: original.client_id,
+      issue_date: new Date(),
+      due_days: 14,
+      currency: original.currency,
+      vat_rate: original.vat_rate,
+      items: original.items.map(item => ({
+        description: item.description,
+        quantity: item.quantity,
+        unit_price: item.unit_price
+      })),
+      // Keep the SAME public token from the original invoice
+      public_token: original.public_token,
+      public_enabled: original.public_enabled,
+      public_expires_at: original.public_expires_at
+    }
+    
+    // Create the copy with the same public page
+    return await createInvoice(newInvoiceData)
+    
+  } catch (error) {
+    return {
+      data: null,
+      error: handleError(error, 'copyInvoiceWithPublicPage')
     }
   }
 }

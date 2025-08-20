@@ -48,6 +48,9 @@ export const invoiceSchema = z.object({
     .min(0, 'დღგ განაკვეთი არ შეიძლება იყოს უარყოფითი')
     .max(100, 'დღგ განაკვეთი არ შეიძლება აღემატებოდეს 100%-ს')
     .default(18),
+  public_token: z.string().optional(),
+  public_enabled: z.boolean().default(true),
+  public_expires_at: z.date().optional(),
   items: z.array(invoiceItemSchema)
     .min(1, 'მინიმუმ ერთი პროდუქტი/სერვისი აუცილებელია')
     .max(50, 'მაქსიმუმ 50 პროდუქტი/სერვისი შეიძლება')

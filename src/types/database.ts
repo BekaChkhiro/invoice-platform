@@ -231,6 +231,9 @@ export interface Database {
           currency: 'GEL' | 'USD' | 'EUR' | null
           sent_at: string | null
           paid_at: string | null
+          public_token: string | null
+          public_enabled: boolean
+          public_expires_at: string | null
         }
         Insert: {
           id?: string
@@ -249,6 +252,9 @@ export interface Database {
           currency?: 'GEL' | 'USD' | 'EUR' | null
           sent_at?: string | null
           paid_at?: string | null
+          public_token?: string | null
+          public_enabled?: boolean
+          public_expires_at?: string | null
         }
         Update: {
           id?: string
@@ -267,6 +273,9 @@ export interface Database {
           currency?: 'GEL' | 'USD' | 'EUR' | null
           sent_at?: string | null
           paid_at?: string | null
+          public_token?: string | null
+          public_enabled?: boolean
+          public_expires_at?: string | null
         }
       }
       // Invoice Items table

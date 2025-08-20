@@ -50,7 +50,7 @@ export async function POST(
     const availableCredits = credits.total_credits - credits.used_credits
     if (availableCredits <= 0) {
       return NextResponse.json(
-        { error: 'არასაკმარისი კრედიტები ინვოისის დუბლირებისთვის' },
+        { error: 'არასაკმარისი კრედიტები ინვოისის კოპირებისთვის' },
         { status: 403 }
       )
     }
@@ -78,21 +78,20 @@ export async function POST(
     const nextCounter = (company.invoice_counter || 0) + 1
     const newInvoiceNumber = `${company.invoice_prefix || 'INV'}-${currentYear}-${String(nextCounter).padStart(4, '0')}`
 
-    // Create duplicate invoice data
+    // Create duplicate invoice data - keeping the SAME public token and settings
     const { 
-      id: originalId, 
-      invoice_number, 
-      status, 
-      created_at, 
-      updated_at,
-      sent_at,
-      paid_at,
-      public_token,
+      id: _originalId, 
+      invoice_number: _invoice_number, 
+      status: _status, 
+      created_at: _created_at, 
+      updated_at: _updated_at,
+      sent_at: _sent_at,
+      paid_at: _paid_at,
       items,
       ...invoiceData 
     } = originalInvoice
 
-    // Create new invoice with reset status and dates, but keep the public token and enabled status
+    // Create new invoice with reset status and dates, but KEEP the same public token
     const newInvoiceData = {
       ...invoiceData,
       invoice_number: newInvoiceNumber,
@@ -101,8 +100,10 @@ export async function POST(
       due_date: new Date(Date.now() + (company.default_due_days || 14) * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      public_token: public_token, // Keep the same public token
-      public_enabled: originalInvoice.public_enabled // Keep the same public enabled status
+      // Keep the SAME public page settings
+      public_token: originalInvoice.public_token,
+      public_enabled: originalInvoice.public_enabled,
+      public_expires_at: originalInvoice.public_expires_at
     }
 
     // Insert the duplicate invoice
@@ -113,9 +114,9 @@ export async function POST(
       .single()
 
     if (insertError) {
-      console.error('Error creating duplicate invoice:', insertError)
+      console.error('Error creating invoice copy:', insertError)
       return NextResponse.json(
-        { error: 'ინვოისის დუბლირება ვერ მოხერხდა' },
+        { error: 'ინვოისის კოპირება ვერ მოხერხდა' },
         { status: 500 }
       )
     }
@@ -142,9 +143,9 @@ export async function POST(
           .delete()
           .eq('id', newInvoice.id)
 
-        console.error('Error duplicating invoice items:', itemsError)
+        console.error('Error copying invoice items:', itemsError)
         return NextResponse.json(
-          { error: 'ინვოისის პროდუქტების დუბლირება ვერ მოხერხდა' },
+          { error: 'ინვოისის პროდუქტების კოპირება ვერ მოხერხდა' },
           { status: 500 }
         )
       }
@@ -190,19 +191,21 @@ export async function POST(
     if (fetchError || !completeInvoice) {
       return NextResponse.json({
         ...newInvoice,
-        message: 'ინვოისი წარმატებით დუბლირდა',
-        originalInvoiceId: id
+        message: 'ინვოისი წარმატებით კოპირდა იგივე საჯარო გვერდის ტოკენით',
+        originalInvoiceId: id,
+        publicUrl: originalInvoice.public_token ? `/i/${originalInvoice.public_token}` : null
       }, { status: 201 })
     }
 
     return NextResponse.json({
       ...completeInvoice,
-      message: 'ინვოისი წარმატებით დუბლირდა',
-      originalInvoiceId: id
+      message: 'ინვოისი წარმატებით კოპირდა იგივე საჯარო გვერდის ტოკენით',
+      originalInvoiceId: id,
+      publicUrl: originalInvoice.public_token ? `/i/${originalInvoice.public_token}` : null
     }, { status: 201 })
 
   } catch (error) {
-    console.error('Unexpected error in POST /api/invoices/[id]/duplicate:', error)
+    console.error('Unexpected error in POST /api/invoices/[id]/copy-public:', error)
     return NextResponse.json(
       { error: 'მოხდა შეცდომა' },
       { status: 500 }
