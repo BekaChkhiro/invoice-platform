@@ -29,8 +29,9 @@ const formatSafe = (value?: string | Date | null, pattern: Intl.DateTimeFormatOp
 
 export const revalidate = 0 // Always fetch fresh data
 
-export default async function PublicInvoicePage({ params }: { params: { token: string } }) {
-  const { data: invoice, error } = await getInvoiceByPublicToken(params.token)
+export default async function PublicInvoicePage({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params
+  const { data: invoice, error } = await getInvoiceByPublicToken(token)
 
   if (error || !invoice) {
     return (
@@ -84,7 +85,7 @@ export default async function PublicInvoicePage({ params }: { params: { token: s
     )
   }
 
-  const shareUrl = (process.env.NEXT_PUBLIC_APP_URL || '') + '/i/' + params.token
+  const shareUrl = (process.env.NEXT_PUBLIC_APP_URL || '') + '/i/' + token
 
   const statusBadge = (status: string) => {
     const map: Record<string, string> = {
@@ -119,7 +120,7 @@ export default async function PublicInvoicePage({ params }: { params: { token: s
             <span className={'inline-flex items-center rounded px-2 py-0.5 ' + statusBadge(invoice.status)}>{getInvoiceStatusLabel(invoice.status)}</span>
           </div>
         </div>
-        <PublicInvoiceActions shareUrl={shareUrl} invoiceId={invoice.id} token={params.token} />
+        <PublicInvoiceActions shareUrl={shareUrl} invoiceId={invoice.id} token={token} />
       </div>
 
 

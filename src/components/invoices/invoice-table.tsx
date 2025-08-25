@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, Eye, Edit, Copy, Mail, Check, Trash2, FileText, ExternalLink, Link as LinkIcon } from 'lucide-react'
+import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, Eye, Edit, Copy, Trash2, FileText, Link as LinkIcon } from 'lucide-react'
 import { format } from 'date-fns'
 import { ka } from 'date-fns/locale'
 
@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 import { InvoiceFilters } from '@/lib/hooks/use-invoice-list'
 import { useInvoiceOperations } from '@/lib/hooks/use-invoices'
+import { useToast } from '@/components/ui/use-toast'
 
 interface Invoice {
   id: string
@@ -61,6 +62,7 @@ export function InvoiceTable({
 }: InvoiceTableProps) {
   const [deleteInvoiceId, setDeleteInvoiceId] = useState<string | null>(null)
   const { updateStatus, duplicate, delete: deleteInvoice } = useInvoiceOperations()
+  const { toast } = useToast()
 
   const getSortIcon = (column: InvoiceFilters['sort_by']) => {
     if (filters.sort_by !== column) {
@@ -95,41 +97,6 @@ export function InvoiceTable({
 
   const canEdit = (invoice: Invoice) => ['draft', 'sent'].includes(invoice.status)
   const canDelete = (invoice: Invoice) => invoice.status === 'draft'
-  const canMarkPaid = (invoice: Invoice) => ['sent', 'overdue'].includes(invoice.status)
-  const canSend = (invoice: Invoice) => ['draft'].includes(invoice.status)
-  const canChangeStatus = (invoice: Invoice) => true // Allow changing to any status
-
-  const handleStatusChange = (invoice: Invoice, newStatus: Invoice['status']) => {
-    updateStatus({
-      id: invoice.id,
-      status: newStatus,
-      paid_at: newStatus === 'paid' ? new Date() : undefined
-    })
-  }
-
-  const handleMarkAsPaid = (invoice: Invoice) => {
-    handleStatusChange(invoice, 'paid')
-  }
-
-  const handleSendEmail = async (invoice: Invoice) => {
-    try {
-      const response = await fetch(`/api/invoices/${invoice.id}/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          attachPDF: true
-        })
-      })
-
-      if (response.ok) {
-        // Status will be updated by the API
-      }
-    } catch (error) {
-      console.error('Failed to send email:', error)
-    }
-  }
 
   const handleDuplicate = (invoice: Invoice) => {
     duplicate(invoice.id)
@@ -144,18 +111,46 @@ export function InvoiceTable({
     }
   }
 
-  const handleGetPublicPdfUrl = async (invoice: Invoice) => {
+  const handleCopyPublicLink = async (invoice: Invoice) => {
     try {
-      const response = await fetch(`/api/invoices/${invoice.id}/pdf-url`)
-      if (response.ok) {
-        const data = await response.json()
-        // Copy URL to clipboard
-        await navigator.clipboard.writeText(data.public_pdf_url)
-        // Show success notification or update UI
-        console.log('Public PDF URL copied to clipboard:', data.public_pdf_url)
+      // Check if invoice already has a public token and is enabled
+      const checkResponse = await fetch(`/api/invoices/${invoice.id}`)
+      if (checkResponse.ok) {
+        const invoiceData = await checkResponse.json()
+        
+        if (invoiceData.public_enabled && invoiceData.public_token) {
+          // Use existing token
+          const url = `${window.location.origin}/i/${invoiceData.public_token}`
+          await navigator.clipboard.writeText(url)
+          toast({ 
+            title: 'ლინკი დაკოპირდა', 
+            description: 'არსებული საჯარო ლინკი დაკოპირდა ბუფერში' 
+          })
+          return
+        }
       }
+      
+      // Create new public link
+      const res = await fetch(`/api/invoices/${invoice.id}/public-link`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rotate: false })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Public ლინკის შექმნა ვერ მოხერხდა')
+      
+      const url = data.url as string
+      await navigator.clipboard.writeText(url)
+      toast({ 
+        title: 'ლინკი შექმნილია', 
+        description: 'ახალი ლინკი შექმნილია და დაკოპირდა ბუფერში' 
+      })
     } catch (error) {
-      console.error('Failed to get public PDF URL:', error)
+      toast({
+        title: 'შეცდომა',
+        description: error instanceof Error ? error.message : 'Public ლინკის კოპირება ვერ მოხერხდა',
+        variant: "destructive"
+      })
     }
   }
 
@@ -267,7 +262,7 @@ export function InvoiceTable({
                     {getSortIcon('total')}
                   </Button>
                 </TableHead>
-                <TableHead className="w-12"></TableHead>
+                <TableHead className="w-20">მოქმედებები</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -321,12 +316,22 @@ export function InvoiceTable({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCopyPublicLink(invoice)}
+                        className="h-8 w-8 p-0"
+                        title="საჯარო ლინკის კოპირება"
+                      >
+                        <LinkIcon className="h-4 w-4" />
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem asChild>
                           <Link 
@@ -337,22 +342,10 @@ export function InvoiceTable({
                             გადახედვა
                           </Link>
                         </DropdownMenuItem>
-                        
-                        <DropdownMenuItem asChild>
-                          <a 
-                            href={`/api/invoices/${invoice.id}/pdf`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2"
-                          >
-                            <FileText className="h-4 w-4" />
-                            PDF გადმოწერა
-                          </a>
-                        </DropdownMenuItem>
 
-                        <DropdownMenuItem onClick={() => handleGetPublicPdfUrl(invoice)}>
+                        <DropdownMenuItem onClick={() => handleCopyPublicLink(invoice)}>
                           <LinkIcon className="h-4 w-4 mr-2" />
-                          საჯარო PDF ბმული
+                          საჯარო ლინკის კოპირება
                         </DropdownMenuItem>
 
                         {canEdit(invoice) && (
@@ -365,40 +358,6 @@ export function InvoiceTable({
                               რედაქტირება
                             </Link>
                           </DropdownMenuItem>
-                        )}
-
-                        <DropdownMenuSeparator />
-
-                        {canSend(invoice) && (
-                          <DropdownMenuItem onClick={() => handleSendEmail(invoice)}>
-                            <Mail className="h-4 w-4 mr-2" />
-                            გაგზავნა ელ.ფოსტით
-                          </DropdownMenuItem>
-                        )}
-
-                        {canChangeStatus(invoice) && (
-                          <>
-                            <DropdownMenuItem onClick={() => handleStatusChange(invoice, 'draft')} disabled={invoice.status === 'draft'}>
-                              <Check className="h-4 w-4 mr-2" />
-                              მონახაზად მონიშვნა
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(invoice, 'sent')} disabled={invoice.status === 'sent'}>
-                              <Check className="h-4 w-4 mr-2" />
-                              გაგზავნილად მონიშვნა
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(invoice, 'paid')} disabled={invoice.status === 'paid'}>
-                              <Check className="h-4 w-4 mr-2" />
-                              გადახდილად მონიშვნა
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(invoice, 'overdue')} disabled={invoice.status === 'overdue'}>
-                              <Check className="h-4 w-4 mr-2" />
-                              ვადაგადაცილებულად მონიშვნა
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleStatusChange(invoice, 'cancelled')} disabled={invoice.status === 'cancelled'}>
-                              <Check className="h-4 w-4 mr-2" />
-                              გაუქმებულად მონიშვნა
-                            </DropdownMenuItem>
-                          </>
                         )}
 
                         <DropdownMenuItem onClick={() => handleDuplicate(invoice)}>
@@ -420,6 +379,7 @@ export function InvoiceTable({
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
