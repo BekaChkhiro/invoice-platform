@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { CheckCircle, FileText, Users, TrendingUp, Clock, Shield, Zap, Star, ArrowRight, Sparkles } from "lucide-react"
 import LandingHeader from "@/components/layout/landing-header"
+import PWAInstallButton from "@/components/ui/pwa-install-button"
 
 export default function LandingPage() {
   return (
@@ -40,6 +41,16 @@ export default function LandingPage() {
                   შესვლა
                 </Button>
               </Link>
+            </div>
+            
+            <div className="mt-6">
+              <PWAInstallButton 
+                variant="secondary" 
+                size="lg" 
+                className="h-10 px-6 text-sm font-medium bg-green-50 hover:bg-green-100 text-green-700 border border-green-200"
+              >
+                📱 აპლიკაციად ინსტალაცია
+              </PWAInstallButton>
             </div>
           </div>
         </div>

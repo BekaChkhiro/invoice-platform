@@ -6,6 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import Link from "next/link"
 import { FileText, User, Settings, LogOut } from "lucide-react"
 import { useAuth } from "@/lib/hooks/use-auth"
+import PWAInstallButton from "@/components/ui/pwa-install-button"
 
 export default function LandingHeader() {
   const { user, signOut, loading } = useAuth()
@@ -110,6 +111,15 @@ export default function LandingHeader() {
             </div>
           ) : (
             <div className="flex items-center space-x-3">
+              <PWAInstallButton 
+                variant="outline" 
+                size="sm" 
+                className="hidden sm:flex border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400"
+                showIcon={false}
+              >
+                📱 აპლიკაცია
+              </PWAInstallButton>
+              
               <Link href="/login">
                 <Button 
                   variant="outline" 
