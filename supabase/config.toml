@@ -39,7 +39,7 @@ max_client_conn = 100
 [realtime]
 enabled = true
 # Bind realtime to IPv6. (default: false)
-ip_version = "ipv4"
+ip_version = "IPv4"
 
 [studio]
 enabled = true
@@ -141,4 +141,3 @@ inspector_port = 8083
 [functions]
 # Configure one of the supported request policies: `oneshot`, `per_worker`.
 # Use `oneshot` for hot reload, or `per_worker` for load testing.
-policy = "oneshot"

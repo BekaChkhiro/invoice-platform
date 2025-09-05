@@ -22,6 +22,8 @@ import { useAuth } from '@/hooks/use-auth'
 
 import { InvoiceFormData } from '@/lib/hooks/use-invoice-form'
 import { useInvoiceForm } from '@/lib/hooks/use-invoice-form'
+import { ServiceSelector } from '@/components/invoices/service-selector'
+import type { Service } from '@/types/database'
 
 interface InvoiceDetailsStepProps {
   form: UseFormReturn<InvoiceFormData>
@@ -94,10 +96,27 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
   const addItem = () => {
     const currentItems = getValues('items')
     const newItem = {
+      service_id: null,
       description: '',
       quantity: 1,
       unit_price: 0,
       line_total: 0,
+      sort_order: currentItems.length
+    }
+    setValue('items', [...currentItems, newItem])
+  }
+
+  const addItemFromService = (service: Service | null) => {
+    if (!service) return
+
+    const currentItems = getValues('items')
+    const newItem = {
+      service_id: service.id,
+      service_name: service.name || '',
+      description: service.description || '',
+      quantity: 1,
+      unit_price: service.default_price || 0,
+      line_total: service.default_price || 0,
       sort_order: currentItems.length
     }
     setValue('items', [...currentItems, newItem])
@@ -141,6 +160,7 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
     const [localUnitPrice, setLocalUnitPrice] = useState((watchedItem?.unit_price ?? 0).toString())
     
     const item = {
+      service_id: watchedItem?.service_id ?? null,
       description: watchedItem?.description ?? '',
       quantity: watchedItem?.quantity ?? 1,
       unit_price: watchedItem?.unit_price ?? 0,
@@ -183,6 +203,7 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
       setValue(`items.${index}.description`, localDescription)
     }
 
+
     return (
       <Card className="group relative overflow-hidden border border-border/50 hover:border-primary/30 transition-all duration-200 hover:shadow-sm">
         <div className="flex items-center justify-between p-3 border-b border-border/30">
@@ -218,20 +239,19 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
         
         <div className="p-4">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-            {/* Description */}
-            <div className="lg:col-span-5">
+            {/* Service Name */}
+            <div className="lg:col-span-3">
               <div className="space-y-1">
-                <Label htmlFor={`item-${index}-description`} className="text-xs font-medium text-muted-foreground">
-                  აღწერა *
+                <Label htmlFor={`item-${index}-service-name`} className="text-xs font-medium text-muted-foreground">
+                  სერვისის სახელი *
                 </Label>
-                <Textarea
-                  id={`item-${index}-description`}
-                  placeholder="პროდუქტის/სერვისის აღწერა..."
+                <Input
+                  id={`item-${index}-service-name`}
+                  placeholder="სერვისის სახელი..."
                   value={localDescription}
                   onChange={(e) => handleDescriptionChange(e.target.value)}
                   onBlur={handleDescriptionBlur}
-                  className="min-h-[60px] resize-none text-sm border-border/60 focus:border-primary transition-colors"
-                  rows={2}
+                  className="text-sm border-border/60 focus:border-primary transition-colors"
                 />
                 {errors.items?.[index]?.description && (
                   <p className="text-xs text-destructive">
@@ -241,8 +261,23 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
               </div>
             </div>
 
+            {/* Description */}
+            <div className="lg:col-span-4">
+              <div className="space-y-1">
+                <Label htmlFor={`item-${index}-description`} className="text-xs font-medium text-muted-foreground">
+                  აღწერა
+                </Label>
+                <Textarea
+                  id={`item-${index}-description`}
+                  placeholder="დამატებითი ინფორმაცია..."
+                  className="min-h-[36px] resize-none text-sm border-border/60 focus:border-primary transition-colors"
+                  rows={1}
+                />
+              </div>
+            </div>
+
             {/* Numbers */}
-            <div className="lg:col-span-7 grid grid-cols-3 gap-3">
+            <div className="lg:col-span-5 grid grid-cols-3 gap-3">
               {/* Quantity */}
               <div className="space-y-1">
                 <Label htmlFor={`item-${index}-quantity`} className="text-xs font-medium text-muted-foreground">
@@ -497,17 +532,31 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
 
       {/* Invoice Items */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium">პროდუქტები/სერვისები</h3>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={addItem}
-            className="flex items-center gap-2"
-          >
-            <Plus className="w-4 h-4" />
-            ახალი ხაზი
-          </Button>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium">პროდუქტები/სერვისები</h3>
+          </div>
+          
+          {/* Service selection and add buttons */}
+          <div className="flex gap-3 items-center">
+            <div className="flex-1">
+              <ServiceSelector
+                value={null}
+                onSelect={addItemFromService}
+                placeholder="აირჩიეთ სერვისი ავტომატური დამატებისთვის..."
+                className="w-full"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addItem}
+              className="flex items-center gap-2 whitespace-nowrap"
+            >
+              <Plus className="w-4 h-4" />
+              ახალი ხაზი
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-3">

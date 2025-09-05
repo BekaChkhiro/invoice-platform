@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, FileText, Users, Plus, User, MoreHorizontal } from 'lucide-react'
+import { Home, FileText, Users, Plus, User, MoreHorizontal, Wrench } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import { Button } from '@/components/ui/button'
@@ -306,6 +306,12 @@ export function MoreMenu({ trigger }: { trigger: React.ReactNode }) {
 
   const moreItems = [
     {
+      id: 'services',
+      label: 'სერვისები',
+      icon: Wrench,
+      href: '/dashboard/services'
+    },
+    {
       id: 'analytics',
       label: 'ანალიტიკა',
       icon: FileText,
@@ -322,12 +328,6 @@ export function MoreMenu({ trigger }: { trigger: React.ReactNode }) {
       label: 'რეპორტები',
       icon: FileText,
       href: '/dashboard/reports'
-    },
-    {
-      id: 'help',
-      label: 'დახმარება',
-      icon: Users,
-      href: '/dashboard/help'
     }
   ]
 

@@ -17,6 +17,7 @@ export default function WorkingDashboardLayout({
             <a href="/working-dashboard" className="block px-4 py-2 rounded bg-gray-800">დაშბორდი</a>
             <a href="/working-dashboard/invoices" className="block px-4 py-2 rounded hover:bg-gray-800">ინვოისები</a>
             <a href="/working-dashboard/clients" className="block px-4 py-2 rounded hover:bg-gray-800">კლიენტები</a>
+            <a href="/working-dashboard/services" className="block px-4 py-2 rounded hover:bg-gray-800">სერვისები</a>
             <a href="/working-dashboard/settings" className="block px-4 py-2 rounded hover:bg-gray-800">პარამეტრები</a>
           </nav>
         </div>

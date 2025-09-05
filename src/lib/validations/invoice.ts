@@ -10,6 +10,7 @@ import { z } from 'zod'
  */
 export const invoiceItemSchema = z.object({
   id: z.string().uuid().optional(),
+  service_id: z.string().uuid().optional().nullable(),
   description: z.string()
     .min(1, 'აღწერა აუცილებელია')
     .max(500, 'აღწერა ძალიან გრძელია'),
@@ -234,6 +235,7 @@ export const validateInvoiceFilter = (data: unknown) => {
  * Returns a new invoice item with default values
  */
 export const createEmptyInvoiceItem = (): Partial<InvoiceItem> => ({
+  service_id: null,
   description: '',
   quantity: 1,
   unit_price: 0,

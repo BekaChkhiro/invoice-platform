@@ -4,7 +4,11 @@ import { useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { X, Download, RefreshCw } from 'lucide-react'
-import { toast } from 'sonner'
+// Simple toast function
+function showToast(message: string, type: 'success' | 'error' | 'info' = 'success') {
+  const icon = type === 'error' ? '❌' : type === 'info' ? '💡' : '✅'
+  alert(`${icon} ${message}`)
+}
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>
@@ -38,12 +42,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
               setUpdateAvailable(true)
-              toast.info('ახალი ვერსია ხელმისაწვდომია', {
-                action: {
-                  label: 'განახლება',
-                  onClick: () => updateApp()
-                }
-              })
+              showToast('ახალი ვერსია ხელმისაწვდომია', 'info')
             }
           })
         }
@@ -52,7 +51,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
       // Handle service worker messages
       navigator.serviceWorker.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'CACHE_UPDATED') {
-          toast.success('კეში განახლდა')
+          showToast('კეში განახლდა')
         }
       })
 
@@ -82,18 +81,18 @@ export function PWAProvider({ children }: PWAProviderProps) {
     const handleAppInstalled = () => {
       setDeferredPrompt(null)
       setShowInstallPrompt(false)
-      toast.success('აპლიკაცია წარმატებით დაინსტალირდა!')
+      showToast('აპლიკაცია წარმატებით დაინსტალირდა!')
     }
 
     // Handle online/offline status
     const handleOnline = () => {
       setIsOnline(true)
-      toast.success('ინტერნეტ კავშირი აღდგა')
+      showToast('ინტერნეტ კავშირი აღდგა')
     }
 
     const handleOffline = () => {
       setIsOnline(false)
-      toast.error('ინტერნეტ კავშირი გაწყდა')
+      showToast('ინტერნეტ კავშირი გაწყდა', 'error')
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
@@ -121,7 +120,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
       
       if (outcome === 'accepted') {
         console.log('User accepted the install prompt')
-        toast.success('აპლიკაცია იწყება ინსტალაცია...')
+        showToast('აპლიკაცია იწყება ინსტალაცია...')
       } else {
         console.log('User dismissed the install prompt')
       }
@@ -130,7 +129,7 @@ export function PWAProvider({ children }: PWAProviderProps) {
       setShowInstallPrompt(false)
     } catch (error) {
       console.error('Install prompt error:', error)
-      toast.error('ინსტალაციის შეცდომა')
+      showToast('ინსტალაციის შეცდომა', 'error')
     }
   }
 

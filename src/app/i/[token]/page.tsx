@@ -10,9 +10,7 @@ const formatCurrency = (amount: number, currency: string = 'GEL') => {
   if (amount === undefined || amount === null || isNaN(Number(amount))) return '-'
   const symbols: Record<string, string> = { GEL: '₾', USD: '$', EUR: '€' }
   const symbol = symbols[currency] || currency
-  const formatted = new Intl.NumberFormat('ka-GE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
-    Number(amount)
-  )
+  const formatted = Number(amount).toLocaleString('ka-GE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   return formatted + ' ' + symbol
 }
 
@@ -21,7 +19,7 @@ const formatSafe = (value?: string | Date | null, pattern: Intl.DateTimeFormatOp
   const d = typeof value === 'string' ? new Date(value) : value
   if (!(d instanceof Date) || isNaN(d.getTime())) return '-'
   try {
-    return new Intl.DateTimeFormat('ka-GE', pattern).format(d)
+    return d.toLocaleDateString('ka-GE', pattern)
   } catch {
     return '-'
   }
@@ -216,8 +214,12 @@ export default async function PublicInvoicePage({ params }: { params: Promise<{ 
           <dl className="text-sm grid grid-cols-2 gap-y-2 gap-x-4">
             <dt className="text-muted-foreground">ვალუტა</dt>
             <dd>{invoice.currency}</dd>
-            <dt className="text-muted-foreground">დღგ</dt>
-            <dd>{invoice.vat_rate}%</dd>
+            {invoice.vat_rate > 0 && (
+              <>
+                <dt className="text-muted-foreground">დღგ</dt>
+                <dd>{invoice.vat_rate}%</dd>
+              </>
+            )}
             {invoice.sent_at && (
               <>
                 <dt className="text-muted-foreground">გაგზავნის დრო</dt>
@@ -233,18 +235,27 @@ export default async function PublicInvoicePage({ params }: { params: Promise<{ 
           </dl>
         </div>
         <div className="rounded-lg border bg-background p-4 ml-auto w-full max-w-lg shadow-sm">
-          <div className="flex justify-between py-2 text-sm">
-            <span>ქვეჯამი:</span>
-            <span>{formatCurrency(invoice.subtotal, invoice.currency)}</span>
-          </div>
-          <div className="flex justify-between py-2 text-sm">
-            <span>დღგ ({invoice.vat_rate}%):</span>
-            <span>{formatCurrency(invoice.vat_amount, invoice.currency)}</span>
-          </div>
-          <div className="flex justify-between items-center py-3 text-base font-semibold border-t mt-2 bg-primary-600 text-primary-foreground rounded-md px-3">
-            <span>საბოლოო ჯამი</span>
-            <span>{formatCurrency(invoice.total, invoice.currency)}</span>
-          </div>
+          {invoice.vat_rate > 0 ? (
+            <>
+              <div className="flex justify-between py-2 text-sm">
+                <span>ქვეჯამი:</span>
+                <span>{formatCurrency(invoice.subtotal, invoice.currency)}</span>
+              </div>
+              <div className="flex justify-between py-2 text-sm">
+                <span>დღგ ({invoice.vat_rate}%):</span>
+                <span>{formatCurrency(invoice.vat_amount, invoice.currency)}</span>
+              </div>
+              <div className="flex justify-between items-center py-3 text-base font-semibold border-t mt-2 bg-primary-600 text-primary-foreground rounded-md px-3">
+                <span>საბოლოო ჯამი</span>
+                <span>{formatCurrency(invoice.total, invoice.currency)}</span>
+              </div>
+            </>
+          ) : (
+            <div className="flex justify-between items-center py-3 text-base font-semibold bg-primary-600 text-primary-foreground rounded-md px-3">
+              <span>საბოლოო ჯამი</span>
+              <span>{formatCurrency(invoice.total, invoice.currency)}</span>
+            </div>
+          )}
         </div>
       </div>
 

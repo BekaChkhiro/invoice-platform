@@ -15,7 +15,8 @@ import {
   Building2,
   User,
   UsersIcon,
-  Crown
+  Crown,
+  Wrench
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -41,6 +42,11 @@ const navigation = [
     name: "კლიენტები",
     href: "/dashboard/clients",
     icon: Users,
+  },
+  {
+    name: "სერვისები",
+    href: "/dashboard/services",
+    icon: Wrench,
   },
 ]
 

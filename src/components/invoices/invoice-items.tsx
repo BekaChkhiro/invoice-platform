@@ -15,6 +15,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 
 import { calculateLineTotal } from '@/lib/validations/invoice'
 import type { CreateInvoice, UpdateInvoice, InvoiceItem } from '@/lib/validations/invoice'
+import { ServiceSelector } from './service-selector'
+import type { Service } from '@/types/database'
 
 // =====================================
 // TYPES AND INTERFACES
@@ -83,7 +85,8 @@ export function InvoiceItems({
           <TableHeader>
             <TableRow className="bg-gray-50">
               <TableHead className="w-8"></TableHead>
-              <TableHead className="min-w-[300px]">აღწერა</TableHead>
+              <TableHead className="w-48">სერვისი</TableHead>
+              <TableHead className="min-w-[250px]">აღწერა</TableHead>
               <TableHead className="w-24">რაოდ.</TableHead>
               <TableHead className="w-32">ერთ. ფასი</TableHead>
               <TableHead className="w-32 text-right">ჯამი</TableHead>
@@ -106,7 +109,7 @@ export function InvoiceItems({
             
             {/* Add Item Row */}
             <TableRow>
-              <TableCell colSpan={6}>
+              <TableCell colSpan={7}>
                 <Button
                   type="button"
                   variant="ghost"
@@ -240,6 +243,23 @@ function InvoiceItemRow({
   const unitPrice = control._getWatch(`items.${index}.unit_price`) || 0
   const lineTotal = calculateLineTotal(quantity, unitPrice)
 
+  // Handle service selection
+  const handleServiceSelect = (service: Service | null) => {
+    // Update the form field values
+    control._setValue(`items.${index}.service_id`, service?.id || null)
+    
+    if (service) {
+      // Auto-populate fields from service
+      if (service.name && !control._getWatch(`items.${index}.description`)) {
+        control._setValue(`items.${index}.description`, service.name)
+      }
+      
+      if (service.default_price && service.default_price > 0) {
+        control._setValue(`items.${index}.unit_price`, service.default_price)
+      }
+    }
+  }
+
   return (
     <TableRow className="group hover:bg-gray-50">
       
@@ -248,6 +268,29 @@ function InvoiceItemRow({
         <div className="flex items-center justify-center">
           <GripVertical className="h-4 w-4 text-gray-400 cursor-grab group-hover:text-gray-600" />
         </div>
+      </TableCell>
+
+      {/* Service Selector */}
+      <TableCell className="p-2">
+        <FormField
+          control={control}
+          name={`items.${index}.service_id`}
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <ServiceSelector
+                  value={field.value}
+                  onSelect={handleServiceSelect}
+                  placeholder="საყარჩევ სერვისი..."
+                  className="w-full"
+                />
+              </FormControl>
+              {errors?.service_id && (
+                <FormMessage>{errors.service_id.message}</FormMessage>
+              )}
+            </FormItem>
+          )}
+        />
       </TableCell>
 
       {/* Description */}

@@ -192,24 +192,31 @@ export function InvoicePreviewStep({ form, totals }: InvoicePreviewStepProps) {
 
             {/* Totals */}
             <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>ქვეჯამი:</span>
-                <span>{totals.subtotal.toFixed(2)} {currencySymbol}</span>
-              </div>
-              
-              {formData.vat_rate > 0 && (
-                <div className="flex justify-between">
-                  <span>დღგ ({formData.vat_rate}%):</span>
-                  <span>{totals.vatAmount.toFixed(2)} {currencySymbol}</span>
+              {formData.vat_rate > 0 ? (
+                <>
+                  <div className="flex justify-between">
+                    <span>ქვეჯამი:</span>
+                    <span>{totals.subtotal.toFixed(2)} {currencySymbol}</span>
+                  </div>
+                  
+                  <div className="flex justify-between">
+                    <span>დღგ ({formData.vat_rate}%):</span>
+                    <span>{totals.vatAmount.toFixed(2)} {currencySymbol}</span>
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>სულ გადასახდელი:</span>
+                    <span>{totals.total.toFixed(2)} {currencySymbol}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="flex justify-between text-lg font-bold">
+                  <span>სულ გადასახდელი:</span>
+                  <span>{totals.total.toFixed(2)} {currencySymbol}</span>
                 </div>
               )}
-              
-              <Separator />
-              
-              <div className="flex justify-between text-lg font-bold">
-                <span>სულ გადასახდელი:</span>
-                <span>{totals.total.toFixed(2)} {currencySymbol}</span>
-              </div>
             </div>
 
           </div>

@@ -9,7 +9,9 @@ import { toast } from 'sonner'
 
 // Validation schemas
 const invoiceItemSchema = z.object({
-  description: z.string().min(1, 'აღწერა აუცილებელია'),
+  service_id: z.string().nullable().optional(),
+  service_name: z.string().min(1, 'სერვისის სახელი აუცილებელია'),
+  description: z.string().optional(),
   quantity: z.number().min(0.001, 'რაოდენობა უნდა იყოს დადებითი'),
   unit_price: z.number().min(0, 'ფასი არ შეიძლება იყოს უარყოფითი'),
   line_total: z.number().optional(),

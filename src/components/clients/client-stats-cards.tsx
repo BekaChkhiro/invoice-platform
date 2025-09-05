@@ -95,32 +95,34 @@ export function ClientStatsCards({ stats, isLoading }: ClientStatsCardsProps) {
     }
   ]
 
+  const paymentBehavior = stats?.payment_behavior_distribution || {}
+  
   const paymentBehaviorCards = [
     {
       title: 'შესანიშნავი გადამხდელები',
-      value: formatNumber(stats?.payment_behavior_distribution?.excellent || 0),
-      percentage: Math.round(((stats?.payment_behavior_distribution?.excellent || 0) / (stats?.total_clients || 1)) * 100),
+      value: formatNumber(paymentBehavior.excellent || 0),
+      percentage: Math.round(((paymentBehavior.excellent || 0) / (stats?.total_clients || 1)) * 100),
       icon: Star,
       color: 'green'
     },
     {
       title: 'კარგი გადამხდელები',
-      value: formatNumber(stats?.payment_behavior_distribution?.good || 0),
-      percentage: Math.round(((stats?.payment_behavior_distribution?.good || 0) / (stats?.total_clients || 1)) * 100),
+      value: formatNumber(paymentBehavior.good || 0),
+      percentage: Math.round(((paymentBehavior.good || 0) / (stats?.total_clients || 1)) * 100),
       icon: UserCheck,
       color: 'blue'
     },
     {
       title: 'საშუალო გადამხდელები',
-      value: formatNumber(stats?.payment_behavior_distribution?.average || 0),
-      percentage: Math.round(((stats?.payment_behavior_distribution?.average || 0) / (stats?.total_clients || 1)) * 100),
+      value: formatNumber(paymentBehavior.average || 0),
+      percentage: Math.round(((paymentBehavior.average || 0) / (stats?.total_clients || 1)) * 100),
       icon: Target,
       color: 'yellow'
     },
     {
       title: 'ცუდი გადამხდელები',
-      value: formatNumber(stats?.payment_behavior_distribution?.poor || 0),
-      percentage: Math.round(((stats?.payment_behavior_distribution?.poor || 0) / (stats?.total_clients || 1)) * 100),
+      value: formatNumber(paymentBehavior.poor || 0),
+      percentage: Math.round(((paymentBehavior.poor || 0) / (stats?.total_clients || 1)) * 100),
       icon: UserX,
       color: 'red'
     }

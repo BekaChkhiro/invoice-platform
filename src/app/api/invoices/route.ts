@@ -278,9 +278,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert invoice items
-    const invoiceItems = items.map((item: { description: string; quantity: number; unit_price: number }, index: number) => ({
+    const invoiceItems = items.map((item: { service_id?: string; service_name?: string; description?: string; quantity: number; unit_price: number; sort_order?: number }, index: number) => ({
       invoice_id: invoice.id,
-      description: item.description,
+      service_id: item.service_id || null,
+      description: item.description || item.service_name || '',
       quantity: item.quantity,
       unit_price: item.unit_price,
       line_total: item.quantity * item.unit_price,
