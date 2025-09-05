@@ -73,6 +73,45 @@ export async function GET(request: NextRequest) {
     const newClients = clients?.filter(c => new Date(c.created_at) > thirtyDaysAgo).length || 0
     const growthPercentage = clients?.length > 0 ? (newClients / clients.length) * 100 : 0
 
+    // Calculate payment behavior distribution based on payment rates per client
+    const paymentBehaviorDistribution = {
+      excellent: 0,
+      good: 0,
+      average: 0,
+      poor: 0
+    }
+
+    // Calculate payment behavior for each client
+    clients?.forEach(client => {
+      const clientInvoices = invoices?.filter(inv => inv.client_id === client.id) || []
+      const clientPaidInvoices = clientInvoices.filter(inv => inv.status === 'paid').length
+      const clientTotalInvoices = clientInvoices.length
+      
+      if (clientTotalInvoices === 0) {
+        // No invoices yet - treat as average
+        paymentBehaviorDistribution.average++
+      } else {
+        const clientPaymentRate = (clientPaidInvoices / clientTotalInvoices) * 100
+        
+        if (clientPaymentRate >= 90) {
+          paymentBehaviorDistribution.excellent++
+        } else if (clientPaymentRate >= 70) {
+          paymentBehaviorDistribution.good++
+        } else if (clientPaymentRate >= 40) {
+          paymentBehaviorDistribution.average++
+        } else {
+          paymentBehaviorDistribution.poor++
+        }
+      }
+    })
+
+    // Get top clients by revenue for additional stats
+    const sortedClients = Array.from(clientRevenue.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5) // top 5 clients
+    
+    const topClientsRevenue = sortedClients.reduce((sum, [, revenue]) => sum + revenue, 0)
+
     // Build comprehensive stats object
     const stats = {
       // Basic counts
@@ -81,19 +120,22 @@ export async function GET(request: NextRequest) {
       inactive_clients: clients?.filter(c => !c.is_active).length || 0,
       companies: clients?.filter(c => c.type === 'company').length || 0,
       individuals: clients?.filter(c => c.type === 'individual').length || 0,
+      new_this_month: newClients,
+      
+      // Growth stats
+      growth_percentage: growthPercentage,
+      
+      // Payment behavior distribution
+      payment_behavior_distribution: paymentBehaviorDistribution,
       
       // Revenue stats
       revenue_stats: {
         total_revenue: totalRevenue,
         average_per_client: avgPerClient,
-        clients_with_revenue: clientRevenue.size
+        top_clients_revenue: topClientsRevenue
       },
       
-      // Growth stats
-      growth_percentage: growthPercentage,
-      new_clients_30d: newClients,
-      
-      // Payment stats
+      // Payment stats (for backward compatibility)
       payment_stats: {
         payment_rate: paymentRate,
         total_invoices: totalInvoices,

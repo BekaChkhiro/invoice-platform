@@ -10,6 +10,24 @@ import { clientService } from '@/lib/services/client'
 import type { ClientFormData, ClientFilter } from '@/lib/validations/client'
 
 // Extended types for client management
+export interface Client {
+  id: string
+  name: string
+  email?: string
+  phone?: string
+  tax_id?: string
+  type: 'individual' | 'company'
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  company_id: string
+  stats?: {
+    total_invoices: number
+    total_revenue: number
+    paid_invoices: number
+    payment_behavior: 'excellent' | 'good' | 'average' | 'poor'
+  }
+}
 export interface ClientFilters {
   search?: string
   type?: 'all' | 'individual' | 'company'

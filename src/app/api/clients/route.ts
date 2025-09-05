@@ -10,7 +10,7 @@ const listClientsSchema = z.object({
   status: z.enum(['all', 'active', 'inactive']).default('all'),
   limit: z.number().min(1).max(100).default(10),
   offset: z.number().min(0).default(0),
-  sort_by: z.enum(['name', 'created_at', 'last_invoice_date']).default('name'),
+  sort_by: z.enum(['name', 'created_at', 'updated_at', 'total_revenue']).default('name'),
   sort_order: z.enum(['asc', 'desc']).default('asc')
 })
 
@@ -89,9 +89,9 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Apply sorting
-    if (filters.sort_by === 'last_invoice_date') {
-      // This requires a different approach - we'll sort by latest invoice date
+    // Apply sorting (client-side sorting for total_revenue)
+    if (filters.sort_by === 'total_revenue') {
+      // We'll sort after calculating revenue statistics
       query = query.order('created_at', { ascending: filters.sort_order === 'asc' })
     } else {
       query = query.order(filters.sort_by, { ascending: filters.sort_order === 'asc' })
@@ -114,6 +114,8 @@ export async function GET(request: NextRequest) {
     // Get invoice statistics for each client
     const clientIds = clients?.map(c => c.id) || []
     
+    console.log('Clients found:', clients?.length, 'ClientIds:', clientIds)
+    
     if (clientIds.length > 0) {
       // Get invoice statistics
       const { data: invoiceStats } = await supabase
@@ -127,22 +129,61 @@ export async function GET(request: NextRequest) {
         const clientInvoices = invoiceStats?.filter(inv => inv.client_id === clientId) || []
         const totalRevenue = clientInvoices.reduce((sum, inv) => sum + Number(inv.total), 0)
         const totalInvoices = clientInvoices.length
+        const paidInvoices = clientInvoices.filter(inv => inv.status === 'paid').length
+        
+        // Calculate payment behavior
+        let paymentBehavior: 'excellent' | 'good' | 'average' | 'poor' = 'average'
+        if (totalInvoices > 0) {
+          const paymentRate = (paidInvoices / totalInvoices) * 100
+          if (paymentRate >= 90) {
+            paymentBehavior = 'excellent'
+          } else if (paymentRate >= 70) {
+            paymentBehavior = 'good'
+          } else if (paymentRate >= 40) {
+            paymentBehavior = 'average'
+          } else {
+            paymentBehavior = 'poor'
+          }
+        }
         
         acc[clientId] = {
           total_invoices: totalInvoices,
-          total_revenue: totalRevenue
+          total_revenue: totalRevenue,
+          paid_invoices: paidInvoices,
+          payment_behavior: paymentBehavior
         }
         return acc
-      }, {} as Record<string, { total_invoices: number; total_revenue: number }>)
+      }, {} as Record<string, { 
+        total_invoices: number; 
+        total_revenue: number; 
+        paid_invoices: number;
+        payment_behavior: 'excellent' | 'good' | 'average' | 'poor'
+      }>)
 
       // Merge statistics with client data
-      const clientsWithStats = clients?.map(client => ({
+      let clientsWithStats = clients?.map(client => ({
         ...client,
-        statistics: clientStats[client.id] || { total_invoices: 0, total_revenue: 0 }
-      }))
+        stats: clientStats[client.id] || { 
+          total_invoices: 0, 
+          total_revenue: 0, 
+          paid_invoices: 0, 
+          payment_behavior: 'average' as const
+        }
+      })) || []
 
+      // Sort by total_revenue if requested
+      if (filters.sort_by === 'total_revenue') {
+        clientsWithStats.sort((a, b) => {
+          const aRevenue = a.stats?.total_revenue || 0
+          const bRevenue = b.stats?.total_revenue || 0
+          return filters.sort_order === 'asc' ? aRevenue - bRevenue : bRevenue - aRevenue
+        })
+      }
+
+      console.log('First client with stats:', clientsWithStats?.[0])
+      
       return NextResponse.json({
-        clients: clientsWithStats || [],
+        clients: clientsWithStats,
         pagination: {
           total: count || 0,
           limit: filters.limit,
