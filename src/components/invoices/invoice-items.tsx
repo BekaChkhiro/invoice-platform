@@ -250,12 +250,18 @@ function InvoiceItemRow({
     
     if (service) {
       // Auto-populate fields from service
-      if (service.name && !control._getWatch(`items.${index}.description`)) {
-        control._setValue(`items.${index}.description`, service.name)
-      }
+      // Always update the description when a service is selected
+      control._setValue(`items.${index}.description`, service.name || '')
       
+      // Always update the price when a service is selected
       if (service.default_price && service.default_price > 0) {
         control._setValue(`items.${index}.unit_price`, service.default_price)
+      }
+      
+      // If quantity is not set, default it to 1
+      const currentQuantity = control._getWatch(`items.${index}.quantity`)
+      if (!currentQuantity || currentQuantity === 0) {
+        control._setValue(`items.${index}.quantity`, 1)
       }
     }
   }

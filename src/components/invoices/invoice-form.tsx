@@ -110,7 +110,14 @@ export function InvoiceForm({
   useEffect(() => {
     if (mode === 'create') {
       const subscription = form.watch((value) => {
-        if (value.client_id || (value.items && value.items.length > 0 && value.items[0]?.description)) {
+        // Save draft if we have a client or any item with content
+        const hasContent = value.client_id || 
+          (value.items && value.items.length > 0 && 
+           value.items.some((item: any) => 
+             item?.description || item?.service_id || item?.quantity || item?.unit_price
+           ))
+        
+        if (hasContent) {
           localStorage.setItem('invoice-draft', JSON.stringify(value))
           setIsDraftSaved(true)
           setTimeout(() => setIsDraftSaved(false), 2000)
@@ -123,15 +130,31 @@ export function InvoiceForm({
   // Load draft on mount (create mode only)
   useEffect(() => {
     if (mode === 'create') {
-      const savedDraft = localStorage.getItem('invoice-draft')
-      if (savedDraft) {
-        try {
-          const draftData = JSON.parse(savedDraft)
-          form.reset(draftData)
-        } catch (error) {
-          console.error('Failed to load draft:', error)
-          localStorage.removeItem('invoice-draft')
+      // Check if we should load draft (only if we're not coming from a successful creation)
+      const shouldLoadDraft = !sessionStorage.getItem('new-invoice-created')
+      
+      if (shouldLoadDraft) {
+        const savedDraft = localStorage.getItem('invoice-draft')
+        if (savedDraft) {
+          try {
+            const draftData = JSON.parse(savedDraft)
+            // Ensure items have at least one entry
+            if (!draftData.items || draftData.items.length === 0) {
+              draftData.items = [createEmptyInvoiceItem()]
+            }
+            // Reset form with draft data and mark as dirty to enable save
+            form.reset(draftData)
+            // Trigger validation to ensure form state is correct
+            form.trigger()
+          } catch (error) {
+            console.error('Failed to load draft:', error)
+            localStorage.removeItem('invoice-draft')
+          }
         }
+      } else {
+        // Clear the session flag and start with clean form
+        sessionStorage.removeItem('new-invoice-created')
+        localStorage.removeItem('invoice-draft')
       }
     }
   }, [mode, form])
@@ -152,8 +175,9 @@ export function InvoiceForm({
         const result = await createMutation.mutateAsync(createData)
         
         if (result.data) {
-          // Clear draft
+          // Clear draft and mark that we successfully created an invoice
           localStorage.removeItem('invoice-draft')
+          sessionStorage.setItem('new-invoice-created', 'true')
           
           // If should send, update status
           if (shouldSend) {
@@ -177,11 +201,11 @@ export function InvoiceForm({
   }
 
   const handleSaveAsDraft = () => {
-    onSubmit(form.getValues(), false)
+    form.handleSubmit((data) => onSubmit(data, false))()
   }
 
   const handleSaveAndSend = () => {
-    onSubmit(form.getValues(), true)
+    form.handleSubmit((data) => onSubmit(data, true))()
   }
 
   const handleAddItem = () => {
@@ -201,7 +225,18 @@ export function InvoiceForm({
 
   const clearDraft = () => {
     localStorage.removeItem('invoice-draft')
+    sessionStorage.removeItem('new-invoice-created')
     setIsDraftSaved(false)
+    // Reset form to default values
+    form.reset({
+      company_id: companyId,
+      client_id: '',
+      issue_date: new Date(),
+      due_days: 14,
+      currency: 'GEL' as const,
+      vat_rate: 18,
+      items: [createEmptyInvoiceItem()]
+    })
   }
 
   const isLoading = createMutation.isLoading || updateMutation.isLoading

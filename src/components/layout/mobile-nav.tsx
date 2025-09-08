@@ -91,7 +91,7 @@ export function MobileNav() {
       id: 'create',
       label: 'შექმნა',
       icon: Plus,
-      href: '/dashboard/invoices/new',
+      href: '/dashboard/invoices/new?fresh=true',
       primary: true
     },
     {

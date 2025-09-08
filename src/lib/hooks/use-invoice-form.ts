@@ -10,8 +10,8 @@ import { toast } from 'sonner'
 // Validation schemas
 const invoiceItemSchema = z.object({
   service_id: z.string().nullable().optional(),
-  service_name: z.string().min(1, 'სერვისის სახელი აუცილებელია'),
-  description: z.string().optional(),
+  service_name: z.string().optional(),
+  description: z.string().min(1, 'აღწერა აუცილებელია'),
   quantity: z.number().min(0.001, 'რაოდენობა უნდა იყოს დადებითი'),
   unit_price: z.number().min(0, 'ფასი არ შეიძლება იყოს უარყოფითი'),
   line_total: z.number().optional(),
@@ -25,9 +25,7 @@ const invoiceFormSchema = z.object({
   currency: z.enum(['GEL', 'USD', 'EUR']).default('GEL'),
   vat_rate: z.number().min(0).max(100).default(18),
   items: z.array(invoiceItemSchema).min(1, 'მინიმუმ ერთი პროდუქტი/სერვისი აუცილებელია'),
-  bank_account_ids: z.array(z.string())
-    .min(1, 'მინიმუმ ერთი ანგარიში უნდა იყოს არჩეული')
-    .optional(),
+  bank_account_ids: z.array(z.string()).optional(),
   send_immediately: z.boolean().default(false)
 })
 
@@ -245,7 +243,9 @@ export function useInvoiceForm() {
         toast.success(`ინვოისი ${result.invoice_number} წარმატებით შეიქმნა`)
       }
 
-      // Navigate to the created invoice
+      // Clear storage and navigate to the created invoice
+      clearStorage()
+      sessionStorage.setItem('new-invoice-created', 'true')
       router.push(`/dashboard/invoices/${result.id}`)
       
     } catch (error) {
@@ -267,6 +267,16 @@ export function useInvoiceForm() {
   }, [getValues])
 
   const loadFromStorage = useCallback(() => {
+    // Check if we should load draft (only if we're not coming from a successful creation)
+    const shouldLoadDraft = !sessionStorage.getItem('new-invoice-created')
+    
+    if (!shouldLoadDraft) {
+      // Clear the session flag and start with clean form
+      sessionStorage.removeItem('new-invoice-created')
+      clearStorage()
+      return false
+    }
+    
     try {
       const stored = localStorage.getItem('invoice-draft')
       if (stored) {
@@ -311,6 +321,7 @@ export function useInvoiceForm() {
 
   const clearStorage = useCallback(() => {
     localStorage.removeItem('invoice-draft')
+    sessionStorage.removeItem('new-invoice-created')
   }, [])
 
   return {

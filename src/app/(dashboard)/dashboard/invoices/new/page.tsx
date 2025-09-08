@@ -1,9 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, ArrowRight, Save, Send } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Save, Send, RotateCcw } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Form } from '@/components/ui/form'
 
@@ -58,8 +59,20 @@ export default function NewInvoicePage() {
 
   // Load draft from storage on mount
   useEffect(() => {
-    loadFromStorage()
-  }, [loadFromStorage])
+    // Check URL params to see if user wants fresh start
+    const urlParams = new URLSearchParams(window.location.search)
+    const freshStart = urlParams.get('fresh') === 'true'
+    
+    if (freshStart) {
+      clearStorage()
+      // Remove fresh param from URL without page reload
+      const newUrl = new URL(window.location.href)
+      newUrl.searchParams.delete('fresh')
+      window.history.replaceState({}, '', newUrl.toString())
+    } else {
+      loadFromStorage()
+    }
+  }, [loadFromStorage, clearStorage])
 
   // Auto-save to storage when form changes
   useEffect(() => {
@@ -79,19 +92,55 @@ export default function NewInvoicePage() {
   }
 
   const handleSaveOnly = async () => {
-    const isValid = await form.trigger()
-    if (!isValid) return
-    
+    // For saving as draft, we need basic validation but can be more lenient
     const formData = form.getValues()
+    
+    // Basic validation - must have client and at least one item with description
+    if (!formData.client_id) {
+      toast.error('კლიენტის არჩევა აუცილებელია')
+      return
+    }
+    
+    if (!formData.items || formData.items.length === 0 || !formData.items[0]?.description) {
+      toast.error('მინიმუმ ერთი პროდუქტის აღწერა აუცილებელია')
+      return
+    }
+    
     await submitInvoice({ ...formData, send_immediately: false })
   }
 
   const handleSaveAndSend = async () => {
+    // For sending, we need full validation
     const isValid = await form.trigger()
-    if (!isValid) return
+    if (!isValid) {
+      const errors = form.formState.errors
+      console.log('Validation errors:', errors)
+      toast.error('გთხოვთ შეასწოროთ ფორმის შეცდომები გაგზავნამდე')
+      return
+    }
     
     const formData = form.getValues()
     await submitInvoice({ ...formData, send_immediately: true })
+  }
+  
+  const handleClearDraft = () => {
+    clearStorage()
+    form.reset({
+      client_id: '',
+      issue_date: new Date(),
+      due_days: 14,
+      currency: 'GEL',
+      vat_rate: 18,
+      items: [{
+        description: '',
+        quantity: 1,
+        unit_price: 0,
+        line_total: 0,
+        sort_order: 0
+      }],
+      bank_account_ids: [],
+      send_immediately: false
+    })
   }
 
   if (!isClient) {
@@ -183,37 +232,50 @@ export default function NewInvoicePage() {
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={goToPreviousStep}
-                  disabled={isFirstStep || isSubmitting}
-                >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
-                  უკან
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={goToPreviousStep}
+                    disabled={isFirstStep || isSubmitting}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    უკან
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearDraft}
+                    disabled={isSubmitting}
+                    title="გადასახდელის გასუფთავება"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </div>
 
                 <div className="flex items-center gap-3">
+                  {/* Save buttons - always available */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isSubmitting}
+                    onClick={handleSaveOnly}
+                  >
+                    <Save className="mr-2 h-4 w-4" />
+                    შენახვა მარტო
+                  </Button>
+                  
                   {isLastStep ? (
-                    <>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={isSubmitting}
-                        onClick={handleSaveOnly}
-                      >
-                        <Save className="mr-2 h-4 w-4" />
-                        შენახვა მარტო
-                      </Button>
-                      <Button
-                        type="button"
-                        disabled={isSubmitting}
-                        onClick={handleSaveAndSend}
-                      >
-                        <Send className="mr-2 h-4 w-4" />
-                        შენახვა და გაგზავნა
-                      </Button>
-                    </>
+                    <Button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={handleSaveAndSend}
+                    >
+                      <Send className="mr-2 h-4 w-4" />
+                      შენახვა და გაგზავნა
+                    </Button>
                   ) : (
                     <Button
                       type="button"

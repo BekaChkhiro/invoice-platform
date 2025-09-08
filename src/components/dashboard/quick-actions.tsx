@@ -107,7 +107,7 @@ export function QuickActions({ loading }: QuickActionsProps) {
       description: 'შექმენით ახალი ინვოისი',
       icon: Plus,
       color: 'text-blue-600 bg-blue-50 hover:bg-blue-100',
-      href: '/dashboard/invoices/new',
+      href: '/dashboard/invoices/new?fresh=true',
       category: 'primary'
     },
     {

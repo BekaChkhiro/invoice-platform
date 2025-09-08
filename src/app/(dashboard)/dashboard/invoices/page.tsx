@@ -168,7 +168,7 @@ export default function InvoicesPage() {
           </DropdownMenu>
           
           <Button asChild>
-            <Link href="/dashboard/invoices/new">
+            <Link href="/dashboard/invoices/new?fresh=true">
               <Plus className="w-4 h-4 mr-2" />
               ახალი ინვოისი
             </Link>
