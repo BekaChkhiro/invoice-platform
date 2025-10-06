@@ -75,10 +75,37 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(
-    handleFetch(request)
-  );
+  // Decide if SW should handle this request
+  if (!shouldHandleRequest(request)) {
+    return; // Let the browser handle (avoid interfering with Next.js RSC/data fetches)
+  }
+
+  event.respondWith(handleFetch(request));
 });
+
+function shouldHandleRequest(request) {
+  try {
+    const url = new URL(request.url);
+    const accept = request.headers.get('accept') || '';
+
+    // Always handle API and static assets
+    if (url.pathname.startsWith('/api/')) return true;
+    if (isStaticAsset(url.pathname)) return true;
+
+    // Handle navigation documents (offline fallback)
+    if (request.destination === 'document') return true;
+
+    // Skip Next.js RSC/data requests
+    // Heuristics: RSC uses text/x-component or application/x-component
+    if (accept.includes('text/x-component') || accept.includes('application/x-component')) return false;
+    if (url.pathname.startsWith('/_next/')) return false;
+
+    // Default: do not handle to avoid breaking framework fetches
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
 
 async function handleFetch(request) {
   const url = new URL(request.url);

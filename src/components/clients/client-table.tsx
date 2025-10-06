@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, Eye, Edit, Plus, Mail, ToggleLeft, ToggleRight, Trash2, FileText, Building, User } from 'lucide-react'
+import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, Eye, Edit, Plus, Mail, ToggleLeft, ToggleRight, Trash2, FileText, Building, User, Calendar, CreditCard } from 'lucide-react'
 import { format } from 'date-fns'
 import { ka } from 'date-fns/locale'
 import Link from 'next/link'
@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 import { ClientFilters, Client } from '@/lib/hooks/use-clients'
 import { useClientOperations } from '@/lib/hooks/use-clients'
+import { useClientSubscriptionsList } from '@/hooks/use-client-subscriptions'
 
 interface ClientTableProps {
   clients: Client[]
@@ -93,6 +94,50 @@ export function ClientTable({
       <Badge variant="secondary" className={`text-xs ${className}`}>
         {label}
       </Badge>
+    )
+  }
+
+  // Component for subscription count display
+  const ClientSubscriptionCount = ({ clientId }: { clientId: string }) => {
+    const { subscriptions, totals, isLoading } = useClientSubscriptionsList(clientId)
+    
+    if (isLoading) {
+      return <Skeleton className="h-4 w-16" />
+    }
+
+    if (totals.active === 0 && totals.paused === 0 && totals.cancelled === 0) {
+      return (
+        <div className="text-sm text-muted-foreground">
+          -
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center gap-2">
+          {totals.active > 0 && (
+            <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+              {totals.active} აქტიური
+            </Badge>
+          )}
+          {totals.paused > 0 && (
+            <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">
+              {totals.paused} პაუზა
+            </Badge>
+          )}
+          {totals.cancelled > 0 && (
+            <Badge variant="secondary" className="bg-gray-100 text-gray-600 text-xs">
+              {totals.cancelled} გაუქმ.
+            </Badge>
+          )}
+        </div>
+        {totals.monthlyRevenue > 0 && (
+          <div className="text-xs text-muted-foreground">
+            {formatCurrency(totals.monthlyRevenue)}/თვე
+          </div>
+        )}
+      </div>
     )
   }
 
@@ -211,6 +256,7 @@ export function ClientTable({
                     {getSortIcon('total_revenue')}
                   </Button>
                 </TableHead>
+                <TableHead>საბსქრიბშენები</TableHead>
                 <TableHead>ქცევა</TableHead>
                 <TableHead>
                   <Button
@@ -289,6 +335,9 @@ export function ClientTable({
                     </div>
                   </TableCell>
                   <TableCell>
+                    <ClientSubscriptionCount clientId={client.id} />
+                  </TableCell>
+                  <TableCell>
                     {getPaymentBehaviorBadge(client.stats?.payment_behavior)}
                   </TableCell>
                   <TableCell>
@@ -333,6 +382,16 @@ export function ClientTable({
                           >
                             <Plus className="h-4 w-4" />
                             ინვოისის შექმნა
+                          </Link>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem asChild>
+                          <Link 
+                            href={`/dashboard/subscriptions/new?client=${client.id}`}
+                            className="flex items-center gap-2"
+                          >
+                            <Calendar className="h-4 w-4" />
+                            საბსქრიბშენის შექმნა
                           </Link>
                         </DropdownMenuItem>
 

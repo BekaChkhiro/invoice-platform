@@ -16,3 +16,6 @@ export interface Client {
   name: string
   email: string
 }
+
+// Re-export client subscriptions types
+export * from './client-subscriptions'

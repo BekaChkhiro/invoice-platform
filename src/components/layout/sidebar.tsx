@@ -16,7 +16,9 @@ import {
   User,
   UsersIcon,
   Crown,
-  Wrench
+  Wrench,
+  Calendar,
+  Clock
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -44,6 +46,11 @@ const navigation = [
     icon: Users,
   },
   {
+    name: "საბსქრიბშენები",
+    href: "/dashboard/subscriptions",
+    icon: Calendar,
+  },
+  {
     name: "სერვისები",
     href: "/dashboard/services",
     icon: Wrench,
@@ -65,6 +72,11 @@ const settingsNavigation = [
     name: "ბილინგი",
     href: "/dashboard/settings/billing",
     icon: CreditCard,
+  },
+  {
+    name: "ავტომატიზაცია",
+    href: "/dashboard/settings/automation",
+    icon: Clock,
   },
   {
     name: "გუნდი",

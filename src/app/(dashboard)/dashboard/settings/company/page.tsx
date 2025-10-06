@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Loader2, Building2, Upload, AlertCircle, Plus, Trash2, Check } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { FlittConfiguration } from "@/components/settings/flitt-configuration"
 
 const companySchema = z.object({
   name: z.string().min(2, "კომპანიის დასახელება სავალდებულოა"),
@@ -436,6 +437,7 @@ export default function CompanySettingsPage() {
             <TabsTrigger value="general">ზოგადი</TabsTrigger>
             <TabsTrigger value="invoice">ინვოისის პარამეტრები</TabsTrigger>
             <TabsTrigger value="banking">საბანკო</TabsTrigger>
+            <TabsTrigger value="flitt">Flitt Payment</TabsTrigger>
           </TabsList>
           <TabsContent value="general" className="space-y-6">
             <Card>
@@ -783,6 +785,10 @@ export default function CompanySettingsPage() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="flitt" className="space-y-6">
+            <FlittConfiguration />
           </TabsContent>
 
           {/* Save Button */}

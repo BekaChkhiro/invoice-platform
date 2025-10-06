@@ -8,6 +8,7 @@ import { useDebounce } from './use-debounce'
 
 import { clientService } from '@/lib/services/client'
 import type { ClientFormData, ClientFilter } from '@/lib/validations/client'
+import type { NewClient } from '@/types/database'
 
 // Extended types for client management
 export interface Client {
@@ -149,7 +150,8 @@ export function useCreateClient() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (data: CreateClient) => clientService.createClient(data),
+    mutationFn: ({ companyId, data }: { companyId: string; data: ClientFormData }) => 
+      clientService.createClient(companyId, data),
     
     onSuccess: (result, variables) => {
       if (result.data) {
@@ -160,8 +162,8 @@ export function useCreateClient() {
         queryClient.invalidateQueries({ queryKey: clientKeys.lists() })
         
         // Invalidate stats if company_id is available
-        if (variables.company_id) {
-          queryClient.invalidateQueries({ queryKey: clientKeys.stats(variables.company_id) })
+        if (variables.companyId) {
+          queryClient.invalidateQueries({ queryKey: clientKeys.stats(variables.companyId) })
         }
         
         // Add the new client to cache
@@ -187,7 +189,7 @@ export function useUpdateClient() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateClient }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<ClientFormData> }) =>
       clientService.updateClient(id, data),
     
     onMutate: async ({ id, data }) => {
@@ -408,7 +410,8 @@ export function useClientList() {
 
       const response = await fetch(`/api/clients?${params.toString()}`)
       if (!response.ok) {
-        throw new Error('კლიენტების მიღება ვერ მოხერხდა')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'კლიენტების მიღება ვერ მოხერხდა')
       }
       return response.json()
     },
@@ -653,8 +656,28 @@ export function useClientInvoices(clientId: string, invoiceFilters?: any) {
   })
 }
 
+/**
+ * Simple hook to get all clients for dropdowns and selection UI
+ */
+export function useAllClients() {
+  return useQuery({
+    queryKey: ['clients-all'],
+    queryFn: async () => {
+      const response = await fetch('/api/clients?limit=100&status=active')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'კლიენტების მიღება ვერ მოხერხდა')
+      }
+      const data = await response.json()
+      return data.clients as Client[]
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000
+  })
+}
+
 // =====================================
 // EXPORT TYPES
 // =====================================
 
-export type { Client, CreateClient, UpdateClient, ClientFilter, ClientFilters, ClientListResponse, ClientStats }
+export type { Client, NewClient as CreateClient, UpdateClient, ClientFilter, ClientFilters, ClientListResponse, ClientStats }

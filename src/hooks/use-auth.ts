@@ -35,6 +35,22 @@ export function useAuth() {
     initializeAuth()
 
     // Subscribe to auth state changes
+    const safeRefresh = () => {
+      try {
+        // Defer to next tick to avoid RSC race conditions
+        setTimeout(() => {
+          try {
+            console.debug('[useAuth] router.refresh()')
+            router.refresh()
+          } catch (e) {
+            console.warn('[useAuth] router.refresh() failed', e)
+          }
+        }, 0)
+      } catch (e) {
+        console.warn('[useAuth] schedule refresh failed', e)
+      }
+    }
+
     const { data: { subscription } } = authService.onAuthStateChange(
       (event, session) => {
         console.log('Auth state changed:', event, !!session)
@@ -45,15 +61,16 @@ export function useAuth() {
         // Handle different auth events
         if (event === 'SIGNED_IN' && session?.user) {
           console.log('User signed in:', session.user.email)
+          safeRefresh()
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out')
           setUser(null)
           setIsAuthenticated(false)
+          safeRefresh()
         } else if (event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed')
+          console.log('Token refreshed (no refresh)')
+          // Avoid forcing router.refresh() on frequent token refresh
         }
-        
-        router.refresh()
       }
     )
 
@@ -69,7 +86,15 @@ export function useAuth() {
       if (result.success) {
         toast.success('წარმატებით გახვედით სისტემიდან')
         router.push('/login')
-        router.refresh()
+        // Defer refresh after navigation
+        setTimeout(() => {
+          try {
+            console.debug('[useAuth] router.refresh() after signOut')
+            router.refresh()
+          } catch (e) {
+            console.warn('[useAuth] router.refresh() after signOut failed', e)
+          }
+        }, 0)
       } else {
         toast.error(result.message || 'გასვლა ვერ მოხერხდა')
       }
