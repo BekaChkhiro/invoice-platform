@@ -61,12 +61,14 @@ const formSteps: Record<FormStep, FormStepConfig> = {
 }
 
 /**
- * Hook for managing multi-step invoice form
+ * Hook for managing multi-step invoice form.
+ * Pass an `invoiceId` to switch into edit mode (PUT instead of POST, no draft storage).
  */
-export function useInvoiceForm() {
+export function useInvoiceForm(invoiceId?: string) {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState<FormStep>('client')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const isEditMode = !!invoiceId
 
   // Form setup with Zod validation
   const form = useForm<InvoiceFormData>({
@@ -197,25 +199,47 @@ export function useInvoiceForm() {
   // Form submission
   const submitInvoice = useCallback(async (data: InvoiceFormData) => {
     setIsSubmitting(true)
-    
+
     try {
-      const response = await fetch('/api/invoices', {
-        method: 'POST',
+      const url = isEditMode ? `/api/invoices/${invoiceId}` : '/api/invoices'
+      const method = isEditMode ? 'PUT' : 'POST'
+
+      const payload: Record<string, unknown> = {
+        ...data,
+        due_date: new Date(data.issue_date.getTime() + data.due_days * 24 * 60 * 60 * 1000)
+      }
+
+      // Strip empty arrays so server-side .min(1) validation doesn't reject the update
+      if (Array.isArray(payload.bank_account_ids) && payload.bank_account_ids.length === 0) {
+        delete payload.bank_account_ids
+      }
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          ...data,
-          due_date: new Date(data.issue_date.getTime() + data.due_days * 24 * 60 * 60 * 1000)
-        })
+        body: JSON.stringify(payload)
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'ინვოისის შექმნა ვერ მოხერხდა')
+        console.error('Invoice submit failed:', error)
+        const detailMessage = Array.isArray(error?.details) && error.details[0]
+          ? `${error.details[0].path?.join('.') || 'ველი'}: ${error.details[0].message}`
+          : null
+        const fallback = isEditMode ? 'ინვოისის განახლება ვერ მოხერხდა' : 'ინვოისის შექმნა ვერ მოხერხდა'
+        throw new Error(detailMessage ? `${error.error || fallback} — ${detailMessage}` : (error.error || fallback))
       }
 
       const result = await response.json()
+
+      if (isEditMode) {
+        toast.success('ინვოისი წარმატებით განახლდა')
+        router.push(`/dashboard/invoices/${invoiceId}`)
+        router.refresh()
+        return
+      }
 
       // If send immediately is enabled, send the invoice
       if (data.send_immediately && result.id) {
@@ -247,26 +271,28 @@ export function useInvoiceForm() {
       clearStorage()
       sessionStorage.setItem('new-invoice-created', 'true')
       router.push(`/dashboard/invoices/${result.id}`)
-      
+
     } catch (error) {
-      console.error('Failed to create invoice:', error)
-      const errorMessage = error instanceof Error ? error.message : 'ინვოისის შექმნა ვერ მოხერხდა'
+      console.error(isEditMode ? 'Failed to update invoice:' : 'Failed to create invoice:', error)
+      const errorMessage = error instanceof Error ? error.message : (isEditMode ? 'ინვოისის განახლება ვერ მოხერხდა' : 'ინვოისის შექმნა ვერ მოხერხდა')
       toast.error(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
-  }, [router])
+  }, [router, isEditMode, invoiceId])
 
-  // Form persistence (localStorage)
+  // Form persistence (localStorage) — disabled in edit mode
   const saveToStorage = useCallback(() => {
+    if (isEditMode) return
     const data = getValues()
     localStorage.setItem('invoice-draft', JSON.stringify({
       ...data,
       issue_date: data.issue_date.toISOString()
     }))
-  }, [getValues])
+  }, [getValues, isEditMode])
 
   const loadFromStorage = useCallback(() => {
+    if (isEditMode) return false
     // Check if we should load draft (only if we're not coming from a successful creation)
     const shouldLoadDraft = !sessionStorage.getItem('new-invoice-created')
     
@@ -317,7 +343,7 @@ export function useInvoiceForm() {
       console.warn('Failed to load draft from storage:', error)
     }
     return false
-  }, [form])
+  }, [form, isEditMode])
 
   const clearStorage = useCallback(() => {
     localStorage.removeItem('invoice-draft')

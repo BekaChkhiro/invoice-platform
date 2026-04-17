@@ -34,14 +34,14 @@ export const invoiceItemSchema = z.object({
  */
 export const invoiceSchema = z.object({
   id: z.string().uuid().optional(),
-  company_id: z.string().uuid(),
+  company_id: z.string().uuid().optional(),
   client_id: z.string().uuid('კლიენტის არჩევა აუცილებელია'),
   bank_account_ids: z.array(z.string().uuid())
     .min(1, 'მინიმუმ ერთი ანგარიში უნდა იყოს არჩეული')
     .optional(),
   invoice_number: z.string().optional(),
-  issue_date: z.date().default(() => new Date()),
-  due_date: z.date(),
+  issue_date: z.coerce.date().default(() => new Date()),
+  due_date: z.coerce.date(),
   status: z.enum(['draft', 'sent', 'paid', 'overdue', 'cancelled'])
     .default('draft'),
   currency: z.enum(['GEL', 'USD', 'EUR']).default('GEL'),
@@ -51,7 +51,7 @@ export const invoiceSchema = z.object({
     .default(18),
   public_token: z.string().optional(),
   public_enabled: z.boolean().default(true),
-  public_expires_at: z.date().optional(),
+  public_expires_at: z.coerce.date().optional(),
   items: z.array(invoiceItemSchema)
     .min(1, 'მინიმუმ ერთი პროდუქტი/სერვისი აუცილებელია')
     .max(50, 'მაქსიმუმ 50 პროდუქტი/სერვისი შეიძლება')

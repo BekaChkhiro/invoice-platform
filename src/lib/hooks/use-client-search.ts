@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useDebounce } from './use-debounce'
 
 interface ClientSearchResult {
@@ -136,29 +136,41 @@ export function useClientDetails(clientId: string | null) {
  */
 export function useCreateClientInline() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const queryClient = useQueryClient()
 
   const createClient = async (clientData: any) => {
-    const response = await fetch('/api/clients', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(clientData)
-    })
+    setIsCreating(true)
+    try {
+      const response = await fetch('/api/clients', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(clientData)
+      })
 
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'კლიენტის შექმნა ვერ მოხერხდა')
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'კლიენტის შექმნა ვერ მოხერხდა')
+      }
+
+      const result = await response.json()
+
+      await queryClient.invalidateQueries({ queryKey: ['all-clients'] })
+      await queryClient.invalidateQueries({ queryKey: ['client-search'] })
+
+      setIsOpen(false)
+      return result
+    } finally {
+      setIsCreating(false)
     }
-
-    const result = await response.json()
-    setIsOpen(false)
-    return result
   }
 
   return {
     isOpen,
     setIsOpen,
+    isCreating,
     createClient
   }
 }

@@ -176,12 +176,23 @@ export async function PUT(
       )
     }
 
-    const { items, ...invoiceUpdateData } = validationResult.data
+    const { items, bank_account_ids, ...invoiceUpdateData } = validationResult.data
 
     // Remove fields that shouldn't be updated
     delete invoiceUpdateData.id
     delete invoiceUpdateData.company_id
     delete invoiceUpdateData.invoice_number
+
+    // bank_account_ids is not a real column — first ID goes to bank_account_id,
+    // full array is persisted inside notes (matching POST /api/invoices behavior)
+    if (bank_account_ids && Array.isArray(bank_account_ids) && bank_account_ids.length > 0) {
+      ;(invoiceUpdateData as any).bank_account_id = bank_account_ids[0]
+      const selectedBankData = {
+        selected_bank_account_ids: bank_account_ids,
+        user_notes: (invoiceUpdateData as any).notes || ''
+      }
+      ;(invoiceUpdateData as any).notes = JSON.stringify(selectedBankData)
+    }
 
     // Calculate new totals if items are provided
     if (items && items.length > 0) {
@@ -224,20 +235,20 @@ export async function PUT(
       const { error: deleteError } = await supabase
         .from('invoice_items')
         .delete()
-        .eq('invoice_id', params.id)
+        .eq('invoice_id', id)
 
       if (deleteError) {
         console.error('Error deleting invoice items:', deleteError)
       }
 
       // Insert new items
-      const invoiceItems = items.map((item: { description: string; quantity: number; rate: number }, index: number) => ({
+      const invoiceItems = items.map((item: { description: string; quantity: number; unit_price: number; sort_order?: number }, index: number) => ({
         invoice_id: id,
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
         line_total: item.quantity * item.unit_price,
-        sort_order: item.sort_order || index
+        sort_order: item.sort_order ?? index
       }))
 
       const { error: itemsError } = await supabase

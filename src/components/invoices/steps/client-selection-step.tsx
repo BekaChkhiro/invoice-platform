@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { UseFormReturn } from 'react-hook-form'
-import { Search, Plus, User, Building } from 'lucide-react'
+import { toast } from 'sonner'
+import { Search, Plus, User, Building, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,6 +42,7 @@ export function ClientSelectionStep({ form }: ClientSelectionStepProps) {
   const {
     isOpen: isNewClientOpen,
     setIsOpen: setIsNewClientOpen,
+    isCreating,
     createClient
   } = useCreateClientInline()
 
@@ -69,12 +71,30 @@ export function ClientSelectionStep({ form }: ClientSelectionStepProps) {
 
   const handleCreateNewClient = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
+    if (newClientData.name.trim().length < 2) {
+      toast.error('სახელი მინიმუმ 2 სიმბოლო უნდა იყოს')
+      return
+    }
+
+    if (newClientData.type === 'company' && !newClientData.tax_id.trim()) {
+      toast.error('იურიდიული პირისთვის საიდენტიფიკაციო კოდი სავალდებულოა')
+      return
+    }
+
+    const payload = {
+      type: newClientData.type,
+      name: newClientData.name.trim(),
+      email: newClientData.email.trim() || undefined,
+      phone: newClientData.phone.trim() || undefined,
+      tax_id: newClientData.tax_id.trim() || undefined,
+      contact_person: newClientData.contact_person.trim() || undefined,
+    }
+
     try {
-      const result = await createClient(newClientData)
+      const result = await createClient(payload)
       setValue('client_id', result.id)
-      
-      // Reset form
+
       setNewClientData({
         type: 'individual',
         name: '',
@@ -83,11 +103,11 @@ export function ClientSelectionStep({ form }: ClientSelectionStepProps) {
         tax_id: '',
         contact_person: ''
       })
-      
-      // Client created successfully
-      
+
+      toast.success('კლიენტი წარმატებით შეიქმნა')
     } catch (error) {
-      console.error('Failed to create client:', error)
+      const message = error instanceof Error ? error.message : 'კლიენტის შექმნა ვერ მოხერხდა'
+      toast.error(message)
     }
   }
 
@@ -255,11 +275,17 @@ export function ClientSelectionStep({ form }: ClientSelectionStepProps) {
                 )}
                 
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsNewClientOpen(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsNewClientOpen(false)}
+                    disabled={isCreating}
+                  >
                     გაუქმება
                   </Button>
-                  <Button type="submit" disabled={!newClientData.name}>
-                    შექმნა
+                  <Button type="submit" disabled={!newClientData.name.trim() || isCreating}>
+                    {isCreating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    {isCreating ? 'იქმნება...' : 'შექმნა'}
                   </Button>
                 </div>
               </form>

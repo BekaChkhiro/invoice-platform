@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { MoreHorizontal, ArrowUpDown, ArrowUp, ArrowDown, Eye, Edit, Plus, Mail, ToggleLeft, ToggleRight, Trash2, FileText, Building, User, Calendar, CreditCard } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, Eye, Edit, Plus, ToggleLeft, ToggleRight, Trash2, FileText, Building, User, Calendar } from 'lucide-react'
 import { format } from 'date-fns'
 import { ka } from 'date-fns/locale'
 import Link from 'next/link'
@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
@@ -346,93 +345,81 @@ export function ClientTable({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem asChild>
-                          <Link 
-                            href={`/dashboard/clients/${client.id}`}
-                            className="flex items-center gap-2"
-                          >
-                            <Eye className="h-4 w-4" />
-                            გადახედვა
-                          </Link>
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuItem asChild>
-                          <Link 
-                            href={`/dashboard/clients/${client.id}/edit`}
-                            className="flex items-center gap-2"
-                          >
-                            <Edit className="h-4 w-4" />
-                            რედაქტირება
-                          </Link>
-                        </DropdownMenuItem>
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        title="გადახედვა"
+                      >
+                        <Link href={`/dashboard/clients/${client.id}`} aria-label="გადახედვა">
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                      </Button>
 
-                        <DropdownMenuSeparator />
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        title="რედაქტირება"
+                      >
+                        <Link href={`/dashboard/clients/${client.id}/edit`} aria-label="რედაქტირება">
+                          <Edit className="h-4 w-4" />
+                        </Link>
+                      </Button>
 
-                        <DropdownMenuItem asChild>
-                          <Link 
-                            href={`/dashboard/invoices/new?client=${client.id}`}
-                            className="flex items-center gap-2"
-                          >
-                            <Plus className="h-4 w-4" />
-                            ინვოისის შექმნა
-                          </Link>
-                        </DropdownMenuItem>
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        title="ინვოისის შექმნა"
+                      >
+                        <Link href={`/dashboard/invoices/new?client=${client.id}`} aria-label="ინვოისის შექმნა">
+                          <Plus className="h-4 w-4" />
+                        </Link>
+                      </Button>
 
-                        <DropdownMenuItem asChild>
-                          <Link 
-                            href={`/dashboard/subscriptions/new?client=${client.id}`}
-                            className="flex items-center gap-2"
-                          >
-                            <Calendar className="h-4 w-4" />
-                            საბსქრიბშენის შექმნა
-                          </Link>
-                        </DropdownMenuItem>
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        title="საბსქრიბშენის შექმნა"
+                      >
+                        <Link href={`/dashboard/subscriptions/new?client=${client.id}`} aria-label="საბსქრიბშენის შექმნა">
+                          <Calendar className="h-4 w-4" />
+                        </Link>
+                      </Button>
 
-                        {client.email && (
-                          <DropdownMenuItem>
-                            <Mail className="h-4 w-4 mr-2" />
-                            ელფოსტა
-                          </DropdownMenuItem>
-                        )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleStatus(client)}
+                        disabled={toggleStatus.isPending}
+                        className="h-8 w-8 p-0"
+                        title={client.is_active ? 'გააქროვე' : 'გააქტიურე'}
+                        aria-label={client.is_active ? 'გააქროვე' : 'გააქტიურე'}
+                      >
+                        {client.is_active
+                          ? <ToggleLeft className="h-4 w-4" />
+                          : <ToggleRight className="h-4 w-4" />}
+                      </Button>
 
-                        <DropdownMenuSeparator />
-
-                        <DropdownMenuItem 
-                          onClick={() => handleToggleStatus(client)}
-                          disabled={toggleStatus.isPending}
-                        >
-                          {client.is_active ? (
-                            <>
-                              <ToggleLeft className="h-4 w-4 mr-2" />
-                              გააქროვე
-                            </>
-                          ) : (
-                            <>
-                              <ToggleRight className="h-4 w-4 mr-2" />
-                              გააქტიურე
-                            </>
-                          )}
-                        </DropdownMenuItem>
-
-                        <DropdownMenuSeparator />
-                        
-                        <DropdownMenuItem 
-                          onClick={() => handleDelete(client)}
-                          className="text-red-600 focus:text-red-600"
-                          disabled={deleteClient.isPending}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          წაშლა
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(client)}
+                        disabled={deleteClient.isPending}
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        title="წაშლა"
+                        aria-label="წაშლა"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
