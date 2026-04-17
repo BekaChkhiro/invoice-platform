@@ -128,7 +128,7 @@ export default function NewInvoicePage() {
     form.reset({
       client_id: '',
       issue_date: new Date(),
-      due_days: 14,
+      due_days: 7,
       currency: 'GEL',
       vat_rate: 18,
       items: [{

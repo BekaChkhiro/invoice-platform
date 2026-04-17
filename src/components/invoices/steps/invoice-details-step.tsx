@@ -461,18 +461,16 @@ export function InvoiceDetailsStep({ form, totals }: InvoiceDetailsStepProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>გადახდის ვადა (დღეები)</FormLabel>
-              <Select value={field.value?.toString() || '14'} onValueChange={(value) => field.onChange(parseInt(value))}>
+              <Select value={field.value?.toString() || '7'} onValueChange={(value) => field.onChange(parseInt(value))}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
+                  <SelectItem value="1">1 დღე</SelectItem>
+                  <SelectItem value="3">3 დღე</SelectItem>
                   <SelectItem value="7">7 დღე</SelectItem>
-                  <SelectItem value="14">14 დღე</SelectItem>
-                  <SelectItem value="30">30 დღე</SelectItem>
-                  <SelectItem value="60">60 დღე</SelectItem>
-                  <SelectItem value="90">90 დღე</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

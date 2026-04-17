@@ -77,7 +77,7 @@ export default function EditInvoicePage() {
         const dueDate = invoice.due_date ? new Date(invoice.due_date) : null
         const dueDays = dueDate
           ? Math.max(1, Math.round((dueDate.getTime() - issueDate.getTime()) / MS_PER_DAY))
-          : 14
+          : 7
 
         const items = Array.isArray(invoice.items) && invoice.items.length > 0
           ? [...invoice.items]

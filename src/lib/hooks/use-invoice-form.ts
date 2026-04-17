@@ -76,7 +76,7 @@ export function useInvoiceForm(invoiceId?: string) {
     defaultValues: {
       client_id: '',
       issue_date: new Date(),
-      due_days: 14,
+      due_days: 7,
       currency: 'GEL',
       vat_rate: 18,
       items: [{
@@ -316,7 +316,7 @@ export function useInvoiceForm(invoiceId?: string) {
         const cleanData = {
           client_id: data.client_id || '',
           issue_date: data.issue_date || new Date(),
-          due_days: data.due_days ?? 14,
+          due_days: data.due_days ?? 7,
           currency: data.currency || 'GEL',
           vat_rate: data.vat_rate ?? 18,
           bank_account_ids: data.bank_account_ids || [],
