@@ -2,7 +2,8 @@
 
 import { useCallback, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Printer, Link as LinkIcon, Check, Download } from 'lucide-react'
+import { Link as LinkIcon, Check, Download } from 'lucide-react'
+import { useInvoicePdfDownload } from '@/lib/hooks/use-invoice-pdf-download'
 
 type Props = {
   shareUrl: string
@@ -12,7 +13,8 @@ type Props = {
 
 export default function PublicInvoiceActions({ shareUrl, invoiceId, token }: Props) {
   const [copied, setCopied] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const { downloadPdf, isDownloading } = useInvoicePdfDownload()
+  const busy = isDownloading
 
   const handlePDF = useCallback(async () => {
     if (!invoiceId || !token) {
@@ -20,28 +22,33 @@ export default function PublicInvoiceActions({ shareUrl, invoiceId, token }: Pro
       return
     }
     try {
-      setBusy(true)
-      const res = await fetch(`/api/invoices/${invoiceId}/pdf/public?token=${encodeURIComponent(token)}`)
+      const res = await fetch(`/api/invoices/${invoiceId}/public-data?token=${encodeURIComponent(token)}`)
       if (!res.ok) {
-        // fallback to print current page
+        // fallback: rely on browser print of current page
         window.print()
         return
       }
-      const html = await res.text()
-      const w = window.open('', '_blank', 'width=800,height=600')
-      if (w) {
-        w.document.write(html)
-        w.document.close()
-        w.addEventListener('load', () => {
-          setTimeout(() => {
-            w.print()
-          }, 300)
-        })
-      }
-    } finally {
-      setBusy(false)
+      const data = await res.json()
+      await downloadPdf({
+        invoice_number: data.invoice_number,
+        issue_date: data.issue_date,
+        due_date: data.due_date,
+        status: data.status,
+        currency: data.currency,
+        vat_rate: data.vat_rate,
+        subtotal: data.subtotal,
+        vat_amount: data.vat_amount,
+        total: data.total,
+        items: data.items || [],
+        client: data.client,
+        company: data.company,
+        bank_accounts: data.bank_accounts,
+        bank_account: data.bank_account,
+      })
+    } catch {
+      window.print()
     }
-  }, [invoiceId, token])
+  }, [invoiceId, token, downloadPdf])
 
   const handleCopy = useCallback(async () => {
     try {

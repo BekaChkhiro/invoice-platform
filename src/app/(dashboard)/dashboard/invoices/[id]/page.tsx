@@ -57,6 +57,7 @@ import {
 } from '@/lib/services/invoice'
 import { clientService } from '@/lib/services/client'
 import { useInvoiceRealtimeDetail } from '@/lib/hooks/use-invoice-realtime'
+import { useInvoicePdfDownload } from '@/lib/hooks/use-invoice-pdf-download'
 import type { Invoice, Client } from '@/types/database'
 
 interface InvoiceWithItems extends Invoice {
@@ -101,6 +102,8 @@ export default function InvoiceDetailPage() {
 
   // Enable real-time updates for this specific invoice
   useInvoiceRealtimeDetail(invoiceId)
+
+  const { downloadPdf, isDownloading: isPdfDownloading } = useInvoicePdfDownload()
 
   // Load invoice data
   useEffect(() => {
@@ -237,65 +240,40 @@ export default function InvoiceDetailPage() {
     }
   }
 
-  // Download PDF
+  // Download PDF directly (client-side via jsPDF + html2canvas)
   const handleDownloadPDF = async () => {
     if (!invoice) return
-    
+
     try {
-      setActionLoading(true)
-      
-      // Generate PDF
-      const response = await fetch(`/api/invoices/${invoice.id}/pdf`)
-      
+      // Fetch full invoice payload (includes company + resolved bank accounts) for the template
+      const response = await fetch(`/api/invoices/${invoice.id}`)
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'PDF-ის გენერაცია ვერ მოხერხდა')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'ინვოისის მონაცემების მიღება ვერ მოხერხდა')
       }
-      
-      // Get the HTML content
-      const htmlContent = await response.text()
-      
-      // Open in new window for PDF conversion
-      const printWindow = window.open('', '_blank', 'width=800,height=600')
-      if (printWindow) {
-        printWindow.document.write(htmlContent)
-        printWindow.document.close()
-        
-        // Wait for content to load, then trigger print dialog
-        printWindow.addEventListener('load', () => {
-          setTimeout(() => {
-            printWindow.print()
-            
-            // Close window after print dialog
-            printWindow.addEventListener('afterprint', () => {
-              printWindow.close()
-            })
-          }, 500)
-        })
-        
-        toast({
-          title: 'PDF მზადაა',
-          description: 'დაბეჭდვის ფანჯარა გაიხსნა - აირჩიეთ "Save as PDF"',
-        })
-      } else {
-        // Fallback - download HTML if popup blocked
-        const blob = new Blob([htmlContent], { type: 'text/html' })
-        const url = window.URL.createObjectURL(blob)
-        
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `invoice-${invoice.invoice_number || invoice.id.slice(0, 8)}.html`
-        
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(url)
-        
-        toast({
-          title: 'PDF ფაილი ჩამოტვირთული',
-          description: 'HTML ფაილი ჩამოიტვირთა - გახსენით და "Save as PDF" გააკეთეთ',
-        })
-      }
+      const fullInvoice = await response.json()
+
+      await downloadPdf({
+        invoice_number: fullInvoice.invoice_number,
+        issue_date: fullInvoice.issue_date,
+        due_date: fullInvoice.due_date,
+        status: fullInvoice.status,
+        currency: fullInvoice.currency,
+        vat_rate: fullInvoice.vat_rate,
+        subtotal: fullInvoice.subtotal,
+        vat_amount: fullInvoice.vat_amount,
+        total: fullInvoice.total,
+        items: fullInvoice.items || [],
+        client: fullInvoice.client,
+        company: fullInvoice.company,
+        bank_accounts: fullInvoice.bank_accounts,
+        bank_account: fullInvoice.bank_account,
+      })
+
+      toast({
+        title: 'PDF ჩამოიტვირთა',
+        description: `invoice-${fullInvoice.invoice_number || fullInvoice.id?.slice(0, 8)}.pdf`,
+      })
     } catch (error) {
       console.error('PDF download error:', error)
       toast({
@@ -303,8 +281,6 @@ export default function InvoiceDetailPage() {
         description: error instanceof Error ? error.message : 'PDF-ის ჩამოტვირთვა ვერ მოხერხდა',
         variant: 'destructive',
       })
-    } finally {
-      setActionLoading(false)
     }
   }
 
@@ -520,10 +496,10 @@ export default function InvoiceDetailPage() {
             variant="outline"
             size="sm"
             onClick={handleDownloadPDF}
-            disabled={actionLoading}
+            disabled={actionLoading || isPdfDownloading}
           >
             <Download className="w-4 h-4 mr-2" />
-            PDF
+            {isPdfDownloading ? 'იქმნება...' : 'PDF'}
           </Button>
           
           {invoice.status === 'draft' && invoice.client?.email && (

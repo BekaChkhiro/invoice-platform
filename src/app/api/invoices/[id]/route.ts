@@ -100,7 +100,40 @@ export async function GET(
       )
     }
 
-    return NextResponse.json(invoice)
+    // Resolve full set of bank accounts (selected at invoice creation, stored in notes JSON)
+    let bankAccounts: any[] | null = null
+    if (typeof invoice.notes === 'string') {
+      try {
+        const parsed = JSON.parse(invoice.notes)
+        if (Array.isArray(parsed?.selected_bank_account_ids) && parsed.selected_bank_account_ids.length > 0) {
+          const { data: accounts } = await supabase
+            .from('company_bank_accounts')
+            .select('id, bank_name, account_number, account_name, is_default')
+            .in('id', parsed.selected_bank_account_ids)
+            .eq('company_id', company.id)
+            .eq('is_active', true)
+            .order('is_default', { ascending: false })
+          if (accounts && accounts.length > 0) bankAccounts = accounts
+        }
+      } catch {}
+    }
+
+    // Fallback to default bank account if invoice doesn't have selected ones
+    if (!bankAccounts || bankAccounts.length === 0) {
+      const { data: defaults } = await supabase
+        .from('company_bank_accounts')
+        .select('id, bank_name, account_number, account_name, is_default')
+        .eq('company_id', company.id)
+        .eq('is_active', true)
+        .eq('is_default', true)
+        .limit(1)
+      if (defaults && defaults.length > 0) bankAccounts = defaults
+    }
+
+    return NextResponse.json({
+      ...invoice,
+      bank_accounts: bankAccounts,
+    })
 
   } catch (error) {
     console.error('Unexpected error in GET /api/invoices/[id]:', error)
