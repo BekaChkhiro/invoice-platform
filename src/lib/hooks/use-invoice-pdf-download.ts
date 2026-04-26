@@ -7,11 +7,10 @@ import InvoicePdfTemplate from '@/components/invoices/pdf/invoice-pdf-template'
 
 type DownloadInput = Parameters<typeof InvoicePdfTemplate>[0]['invoice']
 
-// Tuned to fit each A4 page comfortably without cutting rows.
-// Last page also has totals + footer, so it fits fewer rows.
+// Pagination tuning for A4 pages: avoid mid-row breaks, leave space for totals on last page.
 const ITEMS_PER_PAGE_REGULAR = 22
 const ITEMS_PER_LAST_PAGE = 16
-const SINGLE_PAGE_MAX = 18 // if items <= this, render everything on one page
+const SINGLE_PAGE_MAX = 18
 
 function chunkItems<T>(items: T[]): T[][] {
   const N = items.length
