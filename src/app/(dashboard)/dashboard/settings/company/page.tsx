@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Loader2, Building2, Upload, AlertCircle, Plus, Trash2, Check } from "lucide-react"
+import { Loader2, Building2, Upload, AlertCircle, Plus, Trash2, Check, PenLine } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { FlittConfiguration } from "@/components/settings/flitt-configuration"
 
@@ -53,7 +53,8 @@ export default function CompanySettingsPage() {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
-  const [company, setCompany] = useState<{ id: string; user_id: string; name: string; logo_url?: string | null; tax_id?: string | null; address_line1?: string | null; address_line2?: string | null; city?: string | null; postal_code?: string | null; phone?: string | null; email?: string | null; website?: string | null; bank_name?: string | null; bank_account?: string | null; bank_swift?: string | null; invoice_prefix: string; invoice_notes?: string | null; payment_terms?: string | null; vat_rate: number } | null>(null)
+  const [uploadingSignature, setUploadingSignature] = useState(false)
+  const [company, setCompany] = useState<{ id: string; user_id: string; name: string; logo_url?: string | null; signature_url?: string | null; tax_id?: string | null; address_line1?: string | null; address_line2?: string | null; city?: string | null; postal_code?: string | null; phone?: string | null; email?: string | null; website?: string | null; bank_name?: string | null; bank_account?: string | null; bank_swift?: string | null; invoice_prefix: string; invoice_notes?: string | null; payment_terms?: string | null; vat_rate: number } | null>(null)
   const [bankAccounts, setBankAccounts] = useState<Array<{ id: string; company_id: string; bank_name: string; account_number: string; account_name?: string | null; is_default: boolean; is_active: boolean }>>([])  
   const [showAddBank, setShowAddBank] = useState(false)
   const [newBankAccount, setNewBankAccount] = useState({ bank_name: '', account_number: '', account_name: '' })
@@ -251,6 +252,113 @@ export default function CompanySettingsPage() {
       })
     } finally {
       setUploadingLogo(false)
+    }
+  }
+
+  const handleSignatureUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file || !user || !company) return
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "არასწორი ფაილის ტიპი",
+        description: "გთხოვთ ატვირთოთ სურათი",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "ფაილი ძალიან დიდია",
+        description: "მაქსიმალური ზომა 2MB",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setUploadingSignature(true)
+
+    try {
+      if (company.signature_url) {
+        const oldPath = company.signature_url.split('/').pop()
+        await supabase.storage
+          .from('company-signatures')
+          .remove([`${user.id}/${oldPath}`])
+      }
+
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}.${fileExt}`
+      const filePath = `${user.id}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('company-signatures')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('company-signatures')
+        .getPublicUrl(filePath)
+
+      const { error: updateError } = await supabase
+        .from('companies')
+        .update({ signature_url: publicUrl })
+        .eq('id', company.id)
+
+      if (updateError) throw updateError
+
+      toast({
+        title: "ხელმოწერა ატვირთულია",
+        description: "კომპანიის ხელმოწერა წარმატებით განახლდა",
+      })
+
+      loadCompany()
+
+    } catch (error) {
+      toast({
+        title: "შეცდომა",
+        description: error instanceof Error ? error.message : "ხელმოწერის ატვირთვა ვერ მოხერხდა",
+        variant: "destructive",
+      })
+    } finally {
+      setUploadingSignature(false)
+    }
+  }
+
+  const handleSignatureRemove = async () => {
+    if (!user || !company || !company.signature_url) return
+
+    setUploadingSignature(true)
+
+    try {
+      const oldPath = company.signature_url.split('/').pop()
+      await supabase.storage
+        .from('company-signatures')
+        .remove([`${user.id}/${oldPath}`])
+
+      const { error } = await supabase
+        .from('companies')
+        .update({ signature_url: null })
+        .eq('id', company.id)
+
+      if (error) throw error
+
+      toast({
+        title: "ხელმოწერა წაიშალა",
+        description: "კომპანიის ხელმოწერა წარმატებით წაიშალა",
+      })
+
+      loadCompany()
+
+    } catch (error) {
+      toast({
+        title: "შეცდომა",
+        description: error instanceof Error ? error.message : "ხელმოწერის წაშლა ვერ მოხერხდა",
+        variant: "destructive",
+      })
+    } finally {
+      setUploadingSignature(false)
     }
   }
 
@@ -487,6 +595,71 @@ export default function CompanySettingsPage() {
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       JPG, PNG ან SVG. მაქს. 2MB
+                    </p>
+                  </div>
+                </div>
+
+                {/* Signature Upload */}
+                <div className="flex items-center gap-6 border-t pt-6">
+                  <div className="h-24 w-40 border rounded-md flex items-center justify-center bg-gray-50 overflow-hidden">
+                    {company.signature_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={company.signature_url}
+                        alt="ხელმოწერა"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    ) : (
+                      <PenLine className="h-12 w-12 text-gray-400" />
+                    )}
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">ხელმოწერა</Label>
+                    <p className="text-xs text-gray-500 mt-1 mb-2">
+                      ხელმოწერა გამოჩნდება ინვოისის PDF-ის ქვედა მარცხენა კუთხეში
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="signature" className="cursor-pointer">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={uploadingSignature}
+                          asChild
+                        >
+                          <span>
+                            {uploadingSignature ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Upload className="h-4 w-4" />
+                            )}
+                            ატვირთვა
+                          </span>
+                        </Button>
+                      </Label>
+                      <Input
+                        id="signature"
+                        type="file"
+                        accept="image/jpeg,image/png"
+                        className="hidden"
+                        onChange={handleSignatureUpload}
+                        disabled={uploadingSignature}
+                      />
+                      {company.signature_url && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleSignatureRemove}
+                          disabled={uploadingSignature}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      JPG ან PNG. მაქს. 2MB
                     </p>
                   </div>
                 </div>
