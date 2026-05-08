@@ -47,6 +47,7 @@ export interface Database {
           email: string | null
           website: string | null
           logo_url: string | null
+          signature_url: string | null
           bank_name: string | null
           bank_account: string | null
           bank_swift: string | null
@@ -76,6 +77,7 @@ export interface Database {
           email?: string | null
           website?: string | null
           logo_url?: string | null
+          signature_url?: string | null
           bank_name?: string | null
           bank_account?: string | null
           bank_swift?: string | null
@@ -105,6 +107,7 @@ export interface Database {
           email?: string | null
           website?: string | null
           logo_url?: string | null
+          signature_url?: string | null
           bank_name?: string | null
           bank_account?: string | null
           bank_swift?: string | null
